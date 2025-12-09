@@ -2,334 +2,1257 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Cashine - Secure eWallet</title>
   <style>
-    body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 0; padding: 0;
-      background: linear-gradient(135deg, #e3f2fd, #f0f2f5);
-      color: #333;
+    /* ===== BASE STYLES ===== */
+    :root {
+      --primary: #2563eb;
+      --primary-dark: #1d4ed8;
+      --secondary: #10b981;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --light: #f8fafc;
+      --dark: #1e293b;
+      --gray: #64748b;
+      --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+      --radius: 12px;
+      --transition: all 0.3s ease;
     }
 
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+      color: var(--dark);
+      min-height: 100vh;
+      padding-bottom: 2rem;
+    }
+
+    /* ===== HEADER ===== */
     header {
-      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
       color: white;
       padding: 1.5rem 1rem;
       text-align: center;
-      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
     }
+
+    header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, #10b981, #3b82f6, #8b5cf6);
+    }
+
     header h1 {
       margin: 0;
-      font-size: 1.8rem;
-      letter-spacing: 1px;
+      font-size: 2rem;
+      font-weight: 700;
+      letter-spacing: -0.5px;
     }
+
     header p {
       margin: 0.3rem 0 0;
-      font-size: 0.9rem;
-      opacity: 0.85;
+      font-size: 0.95rem;
+      opacity: 0.9;
     }
 
+    /* ===== CONTAINER ===== */
     .container {
-      max-width: 420px;
+      max-width: 480px;
       margin: 2rem auto;
-      background: #fff;
-      padding: 2rem;
-      border-radius: 15px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-      animation: fadeIn 0.4s ease-in-out;
+      background: white;
+      padding: 2.5rem;
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      animation: slideUp 0.4s ease-out;
+      border: 1px solid rgba(255, 255, 255, 0.2);
     }
 
+    @keyframes slideUp {
+      from {
+        opacity: 0;
+        transform: translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* ===== TYPOGRAPHY ===== */
     h2 {
       text-align: center;
-      margin-bottom: 1.5rem;
-      color: #2a5298;
-      font-weight: 600;
+      margin-bottom: 2rem;
+      color: var(--dark);
+      font-weight: 700;
+      font-size: 1.8rem;
+      position: relative;
+      padding-bottom: 0.5rem;
     }
 
-    input {
-      width: 100%; padding: 12px 14px;
-      margin: 0.5rem 0;
-      border: 1px solid #ddd; 
-      border-radius: 8px;
-      font-size: 0.95rem;
-      transition: border 0.3s;
-    }
-    input:focus {
-      border-color: #2a5298;
-      outline: none;
-      box-shadow: 0 0 5px rgba(42,82,152,0.3);
+    h2::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 60px;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--secondary));
+      border-radius: 2px;
     }
 
-    button {
+    h3 {
+      margin: 1.5rem 0 1rem;
+      color: var(--dark);
+      font-size: 1.3rem;
+    }
+
+    /* ===== FORM ELEMENTS ===== */
+    .input-group {
+      margin-bottom: 1.2rem;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      color: var(--dark);
+      font-size: 0.9rem;
+    }
+
+    input, select {
       width: 100%;
-      padding: 12px;
-      margin: 0.6rem 0;
-      border: none; 
+      padding: 14px 16px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-size: 1rem;
+      transition: var(--transition);
+      background: white;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      width: 100%;
+      padding: 14px;
+      margin: 0.5rem 0;
+      border: none;
       border-radius: 8px;
       font-size: 1rem;
       font-weight: 600;
       cursor: pointer;
-      transition: background 0.3s, transform 0.1s;
+      transition: var(--transition);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
     }
-    button:hover {
+
+    .btn:hover {
       transform: translateY(-2px);
-    }
-    button:active {
-      transform: scale(0.97);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
     }
 
-    button.primary {
-      background: #2a5298;
-      color: #fff;
-    }
-    button.primary:hover {
-      background: #1e3c72;
+    .btn:active {
+      transform: translateY(0);
     }
 
-    button.secondary {
-      background: #f0f2f5;
-      color: #333;
-    }
-    button.secondary:hover {
-      background: #e3e6eb;
+    .btn-primary {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
     }
 
-    .dashboard h2 {
-      color: #222;
-    }
-    .balance {
-      font-size: 1.6rem;
-      font-weight: bold;
-      margin: 1.2rem 0;
-      color: #2a5298;
-      background: #f4f8ff;
-      padding: 0.8rem;
-      border-radius: 10px;
-      box-shadow: inset 0 2px 6px rgba(0,0,0,0.05);
+    .btn-secondary {
+      background: var(--light);
+      color: var(--dark);
+      border: 2px solid #e2e8f0;
     }
 
-    .transactions {
-      text-align: left;
-      margin-top: 1rem;
-      max-height: 200px;
-      overflow-y: auto;
-      border-top: 1px solid #eee;
-      padding-top: 0.8rem;
+    .btn-success {
+      background: linear-gradient(135deg, var(--secondary) 0%, #059669 100%);
+      color: white;
     }
-    .transaction {
+
+    .btn-warning {
+      background: linear-gradient(135deg, var(--warning) 0%, #d97706 100%);
+      color: white;
+    }
+
+    .btn-danger {
+      background: linear-gradient(135deg, var(--danger) 0%, #dc2626 100%);
+      color: white;
+    }
+
+    .btn-back {
+      width: auto;
+      padding: 10px 16px;
+      margin-bottom: 1.5rem;
+      background: var(--light);
+      color: var(--gray);
+    }
+
+    /* ===== DASHBOARD ===== */
+    .dashboard-header {
+      text-align: center;
+      margin-bottom: 2rem;
+    }
+
+    .welcome-msg {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: var(--dark);
+      margin-bottom: 0.5rem;
+    }
+
+    .user-id {
+      color: var(--gray);
       font-size: 0.9rem;
-      padding: 0.6rem;
-      border-radius: 6px;
-      margin-bottom: 0.4rem;
-      background: #f9f9f9;
-      transition: background 0.2s;
     }
+
+    .balance-card {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      padding: 1.5rem;
+      border-radius: var(--radius);
+      margin: 1.5rem 0;
+      text-align: center;
+      box-shadow: 0 8px 20px rgba(37, 99, 235, 0.2);
+    }
+
+    .balance-label {
+      font-size: 0.9rem;
+      opacity: 0.9;
+      margin-bottom: 0.5rem;
+    }
+
+    .balance-amount {
+      font-size: 2.5rem;
+      font-weight: 700;
+      letter-spacing: -1px;
+    }
+
+    .action-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      margin: 2rem 0;
+    }
+
+    .action-btn {
+      padding: 1.2rem;
+      background: white;
+      border: 2px solid #e2e8f0;
+      border-radius: 10px;
+      text-align: center;
+      transition: var(--transition);
+      cursor: pointer;
+    }
+
+    .action-btn:hover {
+      transform: translateY(-3px);
+      border-color: var(--primary);
+      box-shadow: 0 6px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .action-btn i {
+      font-size: 1.5rem;
+      margin-bottom: 0.5rem;
+      display: block;
+    }
+
+    .action-btn span {
+      font-weight: 600;
+      color: var(--dark);
+    }
+
+    /* ===== TRANSACTIONS ===== */
+    .transactions-list {
+      margin-top: 1.5rem;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .transaction {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem;
+      margin-bottom: 0.8rem;
+      background: var(--light);
+      border-radius: 8px;
+      border-left: 4px solid var(--primary);
+      transition: var(--transition);
+    }
+
     .transaction:hover {
-      background: #eef4ff;
+      background: #f1f5f9;
+      transform: translateX(5px);
     }
 
-    a {
-      color: #2a5298;
-      text-decoration: none;
-      font-weight: 500;
-    }
-    a:hover {
-      text-decoration: underline;
+    .transaction.received {
+      border-left-color: var(--secondary);
     }
 
-    .hidden { display: none; }
+    .transaction.sent {
+      border-left-color: var(--warning);
+    }
 
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(10px); }
-      to { opacity: 1; transform: translateY(0); }
+    .transaction.fee {
+      border-left-color: var(--danger);
+    }
+
+    .transaction-type {
+      font-weight: 600;
+      color: var(--dark);
+    }
+
+    .transaction-details {
+      flex: 1;
+      margin-left: 1rem;
+    }
+
+    .transaction-amount {
+      font-weight: 700;
+      font-size: 1.1rem;
+    }
+
+    .transaction-date {
+      font-size: 0.8rem;
+      color: var(--gray);
+      margin-top: 0.2rem;
+    }
+
+    /* ===== FEES INFO ===== */
+    .fee-info {
+      background: #fff7ed;
+      border: 2px solid #fed7aa;
+      border-radius: 8px;
+      padding: 1rem;
+      margin: 1rem 0;
+      font-size: 0.9rem;
+    }
+
+    .fee-info h4 {
+      color: #ea580c;
+      margin-bottom: 0.5rem;
+    }
+
+    /* ===== UTILITY ===== */
+    .hidden {
+      display: none !important;
+    }
+
+    .text-center {
+      text-align: center;
+    }
+
+    .text-muted {
+      color: var(--gray);
+      font-size: 0.9rem;
+    }
+
+    .mt-2 { margin-top: 2rem; }
+    .mt-3 { margin-top: 3rem; }
+    .mb-2 { margin-bottom: 2rem; }
+
+    /* ===== MODAL ===== */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 1rem;
+    }
+
+    .modal {
+      background: white;
+      border-radius: var(--radius);
+      max-width: 400px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+    }
+
+    .modal-header {
+      padding: 1.5rem;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .modal-body {
+      padding: 1.5rem;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--gray);
+    }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 480px) {
+      .container {
+        margin: 1rem;
+        padding: 1.5rem;
+      }
+      
+      .action-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      header h1 {
+        font-size: 1.5rem;
+      }
     }
   </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body>
+  <!-- Header -->
   <header>
-    <h1>Cashine eWallet</h1>
-    <p>Secure • Easy • Fast</p>
+    <h1><i class="fas fa-wallet"></i> Cashine</h1>
+    <p>Your Secure & Modern eWallet Solution</p>
   </header>
 
-  <!-- Auth Forms -->
+  <!-- Login Form -->
   <div class="container" id="authSection">
-    <h2>Login</h2>
-    <input type="text" id="loginID" placeholder="Phone or Wallet ID">
-    <input type="password" id="loginPIN" placeholder="PIN">
-    <button onclick="login()">Login</button>
-    <p style="text-align:center;">No account? <a href="#" onclick="toggleAuth()">Sign Up</a></p>
+    <h2>Welcome Back</h2>
+    <div class="input-group">
+      <input type="text" id="loginID" placeholder="Phone or Wallet ID" autocomplete="username">
+    </div>
+    <div class="input-group">
+      <input type="password" id="loginPIN" placeholder="PIN (4 digits)" autocomplete="current-password">
+    </div>
+    <button class="btn btn-primary" onclick="login()">
+      <i class="fas fa-sign-in-alt"></i> Login
+    </button>
+    <p class="text-center mt-2">
+      No account? <a href="#" onclick="toggleAuth()" style="color: var(--primary); font-weight: 600;">Sign Up</a>
+    </p>
   </div>
 
+  <!-- Sign Up Form -->
   <div class="container hidden" id="signupSection">
-    <h2>Sign Up</h2>
-    <input type="text" id="signupName" placeholder="Full Name">
-    <input type="text" id="signupPhone" placeholder="Phone Number">
-    <input type="password" id="signupPIN" placeholder="PIN (4 digits)">
-    <button onclick="signup()">Create Account</button>
-    <p style="text-align:center;">Already have an account? <a href="#" onclick="toggleAuth()">Login</a></p>
+    <h2>Create Account</h2>
+    <div class="input-group">
+      <input type="text" id="signupName" placeholder="Full Name">
+    </div>
+    <div class="input-group">
+      <input type="email" id="signupEmail" placeholder="Email Address">
+    </div>
+    <div class="input-group">
+      <input type="text" id="signupPhone" placeholder="Phone Number">
+    </div>
+    <div class="input-group">
+      <input type="date" id="signupBirthdate">
+    </div>
+    <div class="input-group">
+      <textarea id="signupAddress" placeholder="Address" rows="2"></textarea>
+    </div>
+    <div class="input-group">
+      <input type="password" id="signupPIN" placeholder="PIN (4 digits)" maxlength="4">
+    </div>
+    <button class="btn btn-success" onclick="signup()">
+      <i class="fas fa-user-plus"></i> Create Account
+    </button>
+    <p class="text-center mt-2">
+      Already have an account? <a href="#" onclick="toggleAuth()" style="color: var(--primary); font-weight: 600;">Login</a>
+    </p>
   </div>
 
+  <!-- Dashboard -->
   <div class="container hidden" id="dashboard">
-    <div class="dashboard">
+    <div class="dashboard-header">
       <h2 id="welcomeMsg">Welcome!</h2>
-      <div class="balance">Balance: ₱<span id="walletBalance">0.00</span></div>
-      <button onclick="showSend()">Send Money</button>
-      <button onclick="showReceive()">Receive Money</button>
-      <button onclick="showTransactions()">Transaction History</button>
-      <button onclick="logout()">Logout</button>
+      <p class="user-id">Wallet ID: <strong id="myWalletID"></strong></p>
+    </div>
 
-      <div id="sendMoney" class="hidden">
-        <h3>Send Money</h3>
-        <button onclick="goBackToDashboard()">⬅ Back</button>
-        <input id="sendTo" placeholder="Recipient Wallet ID">
-        <input id="sendAmount" type="number" placeholder="Amount (PHP)">
-        <input id="sendPIN" type="password" placeholder="Enter PIN">
-        <button onclick="sendMoney()" class="primary">Send</button>
+    <div class="balance-card">
+      <div class="balance-label">Available Balance</div>
+      <div class="balance-amount">₱<span id="walletBalance">0.00</span></div>
+    </div>
+
+    <div class="action-grid">
+      <div class="action-btn" onclick="showSend()">
+        <i class="fas fa-paper-plane" style="color: var(--primary);"></i>
+        <span>Send Money</span>
       </div>
-
-      <div id="receiveMoney" class="hidden">
-        <h3>Receive Money</h3>
-        <button onclick="goBackToDashboard()">⬅ Back</button>
-        <p>Share your Wallet ID to receive funds:</p>
-        <p><strong id="myWalletID"></strong></p>
+      <div class="action-btn" onclick="showReceive()">
+        <i class="fas fa-qrcode" style="color: var(--secondary);"></i>
+        <span>Receive</span>
       </div>
+      <div class="action-btn" onclick="showBankTransfer()">
+        <i class="fas fa-university" style="color: var(--warning);"></i>
+        <span>Bank Transfer</span>
+      </div>
+      <div class="action-btn" onclick="showTransactions()">
+        <i class="fas fa-history" style="color: var(--primary-dark);"></i>
+        <span>History</span>
+      </div>
+      <div class="action-btn" onclick="showCashOut()">
+        <i class="fas fa-money-bill-wave" style="color: var(--secondary);"></i>
+        <span>Cash Out</span>
+      </div>
+      <div class="action-btn" onclick="showProfile()">
+        <i class="fas fa-user-circle" style="color: var(--gray);"></i>
+        <span>Profile</span>
+      </div>
+    </div>
 
-      <div id="transactions" class="hidden">
-        <h3>Transactions</h3>
-        <button onclick="goBackToDashboard()">⬅ Back</button>
-        <div id="transactionList"></div>
+    <button class="btn btn-secondary mt-3" onclick="logout()">
+      <i class="fas fa-sign-out-alt"></i> Logout
+    </button>
+  </div>
+
+  <!-- Send Money Modal -->
+  <div id="sendModal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i class="fas fa-paper-plane"></i> Send Money</h3>
+        <button class="close-btn" onclick="closeModal('sendModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="fee-info">
+          <h4><i class="fas fa-info-circle"></i> Transaction Fee</h4>
+          <p>5% fee applies (₱5 per ₱100). Minimum fee: ₱5</p>
+        </div>
+        <div class="input-group">
+          <label>Recipient Wallet ID or Phone</label>
+          <input type="text" id="sendTo" placeholder="Enter recipient details">
+        </div>
+        <div class="input-group">
+          <label>Amount (PHP)</label>
+          <input type="number" id="sendAmount" placeholder="0.00" min="1">
+        </div>
+        <div class="input-group">
+          <label>Purpose (Optional)</label>
+          <input type="text" id="sendPurpose" placeholder="e.g., For dinner">
+        </div>
+        <div class="input-group">
+          <label>Enter PIN</label>
+          <input type="password" id="sendPIN" placeholder="Enter your 4-digit PIN">
+        </div>
+        <div id="feeCalculation" class="text-muted" style="margin: 1rem 0;"></div>
+        <button class="btn btn-primary" onclick="sendMoney()">
+          <i class="fas fa-paper-plane"></i> Send Money
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bank Transfer Modal -->
+  <div id="bankTransferModal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i class="fas fa-university"></i> Bank Transfer</h3>
+        <button class="close-btn" onclick="closeModal('bankTransferModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="input-group">
+          <label>Select Bank</label>
+          <select id="bankSelect">
+            <option value="">Choose a bank</option>
+            <option value="bpi">BPI (Bank of the Philippine Islands)</option>
+            <option value="bdo">BDO (Banco de Oro)</option>
+            <option value="metrobank">Metrobank</option>
+            <option value="unionbank">UnionBank</option>
+            <option value="landbank">Land Bank of the Philippines</option>
+            <option value="rcbc">RCBC</option>
+          </select>
+        </div>
+        <div class="input-group">
+          <label>Account Number</label>
+          <input type="text" id="bankAccount" placeholder="Enter account number">
+        </div>
+        <div class="input-group">
+          <label>Account Name</label>
+          <input type="text" id="bankAccountName" placeholder="Account holder name">
+        </div>
+        <div class="input-group">
+          <label>Amount (PHP)</label>
+          <input type="number" id="bankAmount" placeholder="0.00" min="1">
+        </div>
+        <div class="fee-info">
+          <h4><i class="fas fa-info-circle"></i> Transfer Fee</h4>
+          <p>Flat fee of ₱25 for bank transfers</p>
+        </div>
+        <div class="input-group">
+          <label>Enter PIN</label>
+          <input type="password" id="bankPIN" placeholder="Enter your 4-digit PIN">
+        </div>
+        <button class="btn btn-primary" onclick="processBankTransfer()">
+          <i class="fas fa-exchange-alt"></i> Transfer to Bank
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Cash Out Modal -->
+  <div id="cashOutModal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i class="fas fa-money-bill-wave"></i> Cash Out</h3>
+        <button class="close-btn" onclick="closeModal('cashOutModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <div class="input-group">
+          <label>Cash Out Amount (PHP)</label>
+          <input type="number" id="cashOutAmount" placeholder="0.00" min="1">
+        </div>
+        <div class="input-group">
+          <label>Select Method</label>
+          <select id="cashOutMethod">
+            <option value="gcash">GCash</option>
+            <option value="maya">Maya</option>
+            <option value="palawan">Palawan Express</option>
+            <option value="cebuana">Cebuana Lhuillier</option>
+            <option value="bank">Bank Withdrawal</option>
+          </select>
+        </div>
+        <div class="fee-info">
+          <h4><i class="fas fa-info-circle"></i> Cash Out Fee</h4>
+          <p>5% fee applies (₱5 per ₱100). Minimum fee: ₱5</p>
+        </div>
+        <div id="cashOutFee" class="text-muted" style="margin: 1rem 0;"></div>
+        <div class="input-group">
+          <label>Enter PIN</label>
+          <input type="password" id="cashOutPIN" placeholder="Enter your 4-digit PIN">
+        </div>
+        <button class="btn btn-warning" onclick="processCashOut()">
+          <i class="fas fa-money-check-alt"></i> Cash Out Now
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Transactions Modal -->
+  <div id="transactionsModal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i class="fas fa-history"></i> Transaction History</h3>
+        <button class="close-btn" onclick="closeModal('transactionsModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <div id="transactionList" class="transactions-list">
+          <!-- Transactions will be loaded here -->
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Profile Modal -->
+  <div id="profileModal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i class="fas fa-user-circle"></i> My Profile</h3>
+        <button class="close-btn" onclick="closeModal('profileModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <div style="text-align: center; margin-bottom: 2rem;">
+          <div style="width: 80px; height: 80px; background: var(--primary); border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; color: white; font-size: 2rem; margin-bottom: 1rem;">
+            <i class="fas fa-user"></i>
+          </div>
+          <h3 id="profileName"></h3>
+          <p class="text-muted" id="profileWalletID"></p>
+        </div>
+        <div class="input-group">
+          <label>Email</label>
+          <input type="text" id="profileEmail" readonly>
+        </div>
+        <div class="input-group">
+          <label>Phone</label>
+          <input type="text" id="profilePhone" readonly>
+        </div>
+        <div class="input-group">
+          <label>Birthdate</label>
+          <input type="text" id="profileBirthdate" readonly>
+        </div>
+        <div class="input-group">
+          <label>Address</label>
+          <textarea id="profileAddress" rows="2" readonly></textarea>
+        </div>
+        <button class="btn btn-secondary mt-2" onclick="closeModal('profileModal')">
+          <i class="fas fa-times"></i> Close
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Receive Modal -->
+  <div id="receiveModal" class="modal-overlay hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3><i class="fas fa-qrcode"></i> Receive Money</h3>
+        <button class="close-btn" onclick="closeModal('receiveModal')">×</button>
+      </div>
+      <div class="modal-body">
+        <div style="text-align: center; padding: 2rem 0;">
+          <div style="width: 200px; height: 200px; background: #f3f4f6; border-radius: 12px; margin: 0 auto 2rem; display: flex; align-items: center; justify-content: center;">
+            <i class="fas fa-qrcode" style="font-size: 5rem; color: var(--primary);"></i>
+          </div>
+          <p>Share your Wallet ID to receive funds:</p>
+          <div style="background: var(--light); padding: 1rem; border-radius: 8px; margin: 1rem 0;">
+            <h2 id="receiveWalletID" style="font-family: monospace; letter-spacing: 1px;"></h2>
+          </div>
+          <p class="text-muted">Or share your phone number: <strong id="receivePhone"></strong></p>
+          <button class="btn btn-secondary" onclick="copyToClipboard('receiveWalletID')">
+            <i class="fas fa-copy"></i> Copy Wallet ID
+          </button>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
+    // Initialize users from localStorage
     let users = JSON.parse(localStorage.getItem('cashine_users')) || [];
     let currentUser = null;
 
-    function goBackToDashboard() {
-      document.getElementById("sendMoney").classList.add("hidden");
-      document.getElementById("receiveMoney").classList.add("hidden");
-      document.getElementById("transactions").classList.add("hidden");
-      document.getElementById("dashboard").classList.remove("hidden");
-    }
-
+    // Toggle between login and signup
     function toggleAuth() {
       document.getElementById("authSection").classList.toggle("hidden");
       document.getElementById("signupSection").classList.toggle("hidden");
     }
 
+    // Calculate fees (5% or ₱5 per ₱100)
+    function calculateFee(amount) {
+      return Math.ceil(amount / 100) * 5;
+    }
+
+    // Signup function with new fields
     function signup() {
       const name = document.getElementById("signupName").value.trim();
+      const email = document.getElementById("signupEmail").value.trim();
       const phone = document.getElementById("signupPhone").value.trim();
+      const birthdate = document.getElementById("signupBirthdate").value;
+      const address = document.getElementById("signupAddress").value.trim();
       const pin = document.getElementById("signupPIN").value.trim();
 
-      if (!name || !phone || pin.length !== 4) {
-        alert("Fill all fields. PIN must be 4 digits.");
+      if (!name || !email || !phone || !birthdate || !address || pin.length !== 4) {
+        alert("Please fill all fields correctly. PIN must be 4 digits.");
         return;
       }
-      const walletID = "W" + Math.floor(100000 + Math.random() * 900000);
-      const user = { name, phone, walletID, pin, balance: 100, transactions: [] };
+
+      // Validate email format
+      if (!validateEmail(email)) {
+        alert("Please enter a valid email address.");
+        return;
+      }
+
+      // Check if email or phone already exists
+      if (users.some(u => u.email === email)) {
+        alert("Email already registered. Please use a different email.");
+        return;
+      }
+      
+      if (users.some(u => u.phone === phone)) {
+        alert("Phone number already registered.");
+        return;
+      }
+
+      // Generate wallet ID
+      const walletID = "CASH" + Math.floor(10000000 + Math.random() * 90000000);
+      
+      // Create user object
+      const user = { 
+        name, 
+        email, 
+        phone, 
+        birthdate, 
+        address, 
+        walletID, 
+        pin, 
+        balance: 500, // Starting balance
+        transactions: [] 
+      };
+      
       users.push(user);
       localStorage.setItem('cashine_users', JSON.stringify(users));
-      alert("Account created! Your Wallet ID: " + walletID);
+      
+      alert(`✅ Account created successfully!\n\nYour Wallet ID: ${walletID}\nStarting Balance: ₱500.00\n\nPlease keep your Wallet ID and PIN safe.`);
+      
+      // Clear form and show login
+      document.getElementById("signupName").value = "";
+      document.getElementById("signupEmail").value = "";
+      document.getElementById("signupPhone").value = "";
+      document.getElementById("signupBirthdate").value = "";
+      document.getElementById("signupAddress").value = "";
+      document.getElementById("signupPIN").value = "";
+      
       toggleAuth();
     }
 
+    // Login function
     function login() {
       const id = document.getElementById("loginID").value.trim();
       const pin = document.getElementById("loginPIN").value.trim();
-      currentUser = users.find(u => (u.phone === id || u.walletID === id) && u.pin === pin);
+      
+      currentUser = users.find(u => 
+        (u.phone === id || u.walletID === id) && u.pin === pin
+      );
+      
       if (!currentUser) {
-        alert("Invalid credentials.");
+        alert("❌ Invalid credentials. Please check your ID/Phone and PIN.");
         return;
       }
+      
+      // Show dashboard
       document.getElementById("authSection").classList.add("hidden");
+      document.getElementById("signupSection").classList.add("hidden");
       document.getElementById("dashboard").classList.remove("hidden");
-      document.getElementById("welcomeMsg").innerText = "Welcome, " + currentUser.name;
+      
+      // Update dashboard info
+      document.getElementById("welcomeMsg").innerText = `Welcome, ${currentUser.name}!`;
       document.getElementById("walletBalance").innerText = currentUser.balance.toFixed(2);
       document.getElementById("myWalletID").innerText = currentUser.walletID;
     }
 
+    // Logout function
     function logout() {
-      currentUser = null;
-      document.getElementById("dashboard").classList.add("hidden");
-      document.getElementById("authSection").classList.remove("hidden");
+      if (confirm("Are you sure you want to logout?")) {
+        currentUser = null;
+        document.getElementById("dashboard").classList.add("hidden");
+        document.getElementById("authSection").classList.remove("hidden");
+        
+        // Clear login form
+        document.getElementById("loginID").value = "";
+        document.getElementById("loginPIN").value = "";
+      }
     }
 
+    // Modal functions
     function showSend() {
-      hideSections();
-      document.getElementById("sendMoney").classList.remove("hidden");
+      document.getElementById("sendModal").classList.remove("hidden");
+      document.getElementById("sendAmount").addEventListener("input", updateFeeCalculation);
     }
 
-    function showReceive() {
-      hideSections();
-      document.getElementById("receiveMoney").classList.remove("hidden");
+    function showBankTransfer() {
+      document.getElementById("bankTransferModal").classList.remove("hidden");
+    }
+
+    function showCashOut() {
+      document.getElementById("cashOutModal").classList.remove("hidden");
+      document.getElementById("cashOutAmount").addEventListener("input", updateCashOutFee);
     }
 
     function showTransactions() {
-      hideSections();
-      const list = document.getElementById("transactionList");
-      list.innerHTML = currentUser.transactions.map(t =>
-        `<div class="transaction">${t.date} - ${t.type}: ₱${t.amount} (${t.note})</div>`
-      ).join("");
-      document.getElementById("transactions").classList.remove("hidden");
+      document.getElementById("transactionsModal").classList.remove("hidden");
+      loadTransactionHistory();
     }
 
-    function hideSections() {
-      document.getElementById("sendMoney").classList.add("hidden");
-      document.getElementById("receiveMoney").classList.add("hidden");
-      document.getElementById("transactions").classList.add("hidden");
+    function showProfile() {
+      if (currentUser) {
+        document.getElementById("profileName").innerText = currentUser.name;
+        document.getElementById("profileWalletID").innerText = `Wallet ID: ${currentUser.walletID}`;
+        document.getElementById("profileEmail").value = currentUser.email;
+        document.getElementById("profilePhone").value = currentUser.phone;
+        document.getElementById("profileBirthdate").value = currentUser.birthdate;
+        document.getElementById("profileAddress").value = currentUser.address;
+        document.getElementById("profileModal").classList.remove("hidden");
+      }
     }
 
+    function showReceive() {
+      if (currentUser) {
+        document.getElementById("receiveWalletID").innerText = currentUser.walletID;
+        document.getElementById("receivePhone").innerText = currentUser.phone;
+        document.getElementById("receiveModal").classList.remove("hidden");
+      }
+    }
+
+    function closeModal(modalId) {
+      document.getElementById(modalId).classList.add("hidden");
+    }
+
+    // Send money with fee calculation
     function sendMoney() {
       const to = document.getElementById("sendTo").value.trim();
       const amount = parseFloat(document.getElementById("sendAmount").value);
+      const purpose = document.getElementById("sendPurpose").value.trim() || "Money Transfer";
       const pin = document.getElementById("sendPIN").value.trim();
-
+      
+      // Validations
       if (pin !== currentUser.pin) {
-        alert("Wrong PIN.");
+        alert("❌ Wrong PIN. Please try again.");
         return;
       }
+      
       if (isNaN(amount) || amount <= 0) {
-        alert("Enter a valid amount.");
+        alert("❌ Please enter a valid amount.");
         return;
       }
-      if (amount > currentUser.balance) {
-        alert("Insufficient balance.");
+      
+      if (amount < 1) {
+        alert("❌ Minimum amount is ₱1.00");
         return;
       }
-
-      const recipient = users.find(u => u.walletID === to);
-
+      
+      // Calculate fee
+      const fee = calculateFee(amount);
+      const totalDeduction = amount + fee;
+      
+      if (totalDeduction > currentUser.balance) {
+        alert(`❌ Insufficient balance.\n\nAmount: ₱${amount.toFixed(2)}\nFee: ₱${fee.toFixed(2)}\nTotal: ₱${totalDeduction.toFixed(2)}\nAvailable: ₱${currentUser.balance.toFixed(2)}`);
+        return;
+      }
+      
+      // Find recipient
+      const recipient = users.find(u => u.walletID === to || u.phone === to);
+      
       if (!recipient) {
-        alert("Recipient not found in Cashine. Transaction cancelled.");
+        alert("❌ Recipient not found. Please check the Wallet ID or Phone number.");
         return;
       }
-
-      currentUser.balance -= amount;
-      currentUser.transactions.push({
-        type: "Sent",
-        amount,
-        note: "To " + recipient.walletID,
-        date: new Date().toLocaleString()
-      });
-
+      
+      if (recipient.walletID === currentUser.walletID) {
+        alert("❌ You cannot send money to yourself.");
+        return;
+      }
+      
+      // Process transaction
+      currentUser.balance -= totalDeduction;
       recipient.balance += amount;
-      recipient.transactions.push({
+      
+      // Add transaction to sender
+      const senderTransaction = {
+        type: "Sent",
+        amount: -amount,
+        fee: -fee,
+        note: `To ${recipient.name} (${purpose})`,
+        date: new Date().toLocaleString(),
+        recipient: recipient.name,
+        total: -totalDeduction
+      };
+      
+      currentUser.transactions.push(senderTransaction);
+      
+      // Add transaction to recipient
+      const recipientTransaction = {
         type: "Received",
-        amount,
-        note: "From " + currentUser.walletID,
-        date: new Date().toLocaleString()
-      });
-
+        amount: amount,
+        fee: 0,
+        note: `From ${currentUser.name} (${purpose})`,
+        date: new Date().toLocaleString(),
+        sender: currentUser.name,
+        total: amount
+      };
+      
+      recipient.transactions.push(recipientTransaction);
+      
+      // Save to localStorage
       localStorage.setItem('cashine_users', JSON.stringify(users));
+      
+      // Update UI
       document.getElementById("walletBalance").innerText = currentUser.balance.toFixed(2);
-
-      alert("Money sent successfully to " + recipient.name + "!");
+      
+      // Show success message
+      alert(`✅ Money sent successfully!\n\nAmount: ₱${amount.toFixed(2)}\nFee: ₱${fee.toFixed(2)}\nRecipient: ${recipient.name}\nNew Balance: ₱${currentUser.balance.toFixed(2)}`);
+      
+      // Clear form and close modal
       document.getElementById("sendTo").value = "";
       document.getElementById("sendAmount").value = "";
+      document.getElementById("sendPurpose").value = "";
       document.getElementById("sendPIN").value = "";
+      document.getElementById("feeCalculation").innerHTML = "";
+      
+      closeModal("sendModal");
     }
+
+    // Process bank transfer
+    function processBankTransfer() {
+      const bank = document.getElementById("bankSelect").value;
+      const account = document.getElementById("bankAccount").value.trim();
+      const accountName = document.getElementById("bankAccountName").value.trim();
+      const amount = parseFloat(document.getElementById("bankAmount").value);
+      const pin = document.getElementById("bankPIN").value.trim();
+      
+      if (!bank || !account || !accountName || isNaN(amount) || amount <= 0) {
+        alert("❌ Please fill all fields correctly.");
+        return;
+      }
+      
+      if (pin !== currentUser.pin) {
+        alert("❌ Wrong PIN. Please try again.");
+        return;
+      }
+      
+      const fee = 25; // Flat fee for bank transfer
+      const totalDeduction = amount + fee;
+      
+      if (totalDeduction > currentUser.balance) {
+        alert(`❌ Insufficient balance.\n\nAmount: ₱${amount.toFixed(2)}\nFee: ₱${fee.toFixed(2)}\nTotal: ₱${totalDeduction.toFixed(2)}\nAvailable: ₱${currentUser.balance.toFixed(2)}`);
+        return;
+      }
+      
+      // Process transfer
+      currentUser.balance -= totalDeduction;
+      
+      // Add transaction
+      const transaction = {
+        type: "Bank Transfer",
+        amount: -amount,
+        fee: -fee,
+        note: `To ${getBankName(bank)} - ${accountName}`,
+        date: new Date().toLocaleString(),
+        bank: getBankName(bank),
+        account: account,
+        total: -totalDeduction
+      };
+      
+      currentUser.transactions.push(transaction);
+      localStorage.setItem('cashine_users', JSON.stringify(users));
+      
+      // Update UI
+      document.getElementById("walletBalance").innerText = currentUser.balance.toFixed(2);
+      
+      alert(`✅ Bank transfer initiated!\n\nAmount: ₱${amount.toFixed(2)}\nFee: ₱${fee.toFixed(2)}\nBank: ${getBankName(bank)}\nAccount: ${account}\nTransfer will be processed within 24 hours.`);
+      
+      // Clear form and close modal
+      document.getElementById("bankSelect").value = "";
+      document.getElementById("bankAccount").value = "";
+      document.getElementById("bankAccountName").value = "";
+      document.getElementById("bankAmount").value = "";
+      document.getElementById("bankPIN").value = "";
+      
+      closeModal("bankTransferModal");
+    }
+
+    // Process cash out
+    function processCashOut() {
+      const amount = parseFloat(document.getElementById("cashOutAmount").value);
+      const method = document.getElementById("cashOutMethod").value;
+      const pin = document.getElementById("cashOutPIN").value.trim();
+      
+      if (isNaN(amount) || amount <= 0) {
+        alert("❌ Please enter a valid amount.");
+        return;
+      }
+      
+      if (pin !== currentUser.pin) {
+        alert("❌ Wrong PIN. Please try again.");
+        return;
+      }
+      
+      const fee = calculateFee(amount);
+      const totalDeduction = amount + fee;
+      
+      if (totalDeduction > currentUser.balance) {
+        alert(`❌ Insufficient balance.\n\nAmount: ₱${amount.toFixed(2)}\nFee: ₱${fee.toFixed(2)}\nTotal: ₱${totalDeduction.toFixed(2)}\nAvailable: ₱${currentUser.balance.toFixed(2)}`);
+        return;
+      }
+      
+      // Process cash out
+      currentUser.balance -= totalDeduction;
+      
+      // Add transaction
+      const transaction = {
+        type: "Cash Out",
+        amount: -amount,
+        fee: -fee,
+        note: `Via ${getMethodName(method)}`,
+        date: new Date().toLocaleString(),
+        method: getMethodName(method),
+        total: -totalDeduction
+      };
+      
+      currentUser.transactions.push(transaction);
+      localStorage.setItem('cashine_users', JSON.stringify(users));
+      
+      // Update UI
+      document.getElementById("walletBalance").innerText = currentUser.balance.toFixed(2);
+      
+      alert(`✅ Cash out request submitted!\n\nAmount: ₱${amount.toFixed(2)}\nFee: ₱${fee.toFixed(2)}\nMethod: ${getMethodName(method)}\nYou will receive the funds within 2 hours.`);
+      
+      // Clear form and close modal
+      document.getElementById("cashOutAmount").value = "";
+      document.getElementById("cashOutPIN").value = "";
+      document.getElementById("cashOutFee").innerHTML = "";
+      
+      closeModal("cashOutModal");
+    }
+
+    // Load transaction history
+    function loadTransactionHistory() {
+      const list = document.getElementById("transactionList");
+      
+      if (!currentUser.transactions || currentUser.transactions.length === 0) {
+        list.innerHTML = `
+          <div style="text-align: center; padding: 3rem 1rem; color: var(--gray);">
+            <i class="fas fa-history" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+            <p>No transactions yet</p>
+          </div>
+        `;
+        return;
+      }
+      
+      // Sort transactions by date (newest first)
+      const sortedTransactions = [...currentUser.transactions].sort((a, b) => 
+        new Date(b.date) - new Date(a.date)
+      );
+      
+      list.innerHTML = sortedTransactions.map(t => {
+        const isPositive = t.amount > 0;
+        const typeClass = isPositive ? 'received' : t.type === 'Cash Out' ? 'fee' : 'sent';
+        const sign = isPositive ? '+' : '';
+        const feeDisplay = t.fee < 0 ? `<div style="font-size: 0.8rem; color: var(--danger);">Fee: ₱${Math.abs(t.fee).toFixed(2)}</div>` : '';
+        
+        return `
+          <div class="transaction ${typeClass}">
+            <div class="transaction-details">
+              <div class="transaction-type">${t.type}</div>
+              <div class="transaction-date">${t.date}</div>
+              <div class="text-muted" style="font-size: 0.9rem;">${t.note}</div>
+              ${feeDisplay}
+            </div>
+            <div class="transaction-amount" style="color: ${isPositive ? 'var(--secondary)' : 'var(--danger)'};">
+              ${sign}₱${Math.abs(t.amount).toFixed(2)}
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    // Utility functions
+    function updateFeeCalculation() {
+      const amount = parseFloat(document.getElementById("sendAmount").value);
+      if (isNaN(amount) || amount <= 0) return;
+      
+      const fee = calculateFee(amount);
+      const total = amount + fee;
+      
+      document.getElementById("feeCalculation").innerHTML = `
+        <div style="background: var(--light); padding: 1rem; border-radius: 8px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+            <span>Amount:</span>
+            <span>₱${amount.toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; color: var(--danger);">
+            <span>Fee (5%):</span>
+            <span>₱${fee.toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-weight: 600; border-top: 1px solid #ddd; padding-top: 0.5rem;">
+            <span>Total Deduction:</span>
+            <span>₱${total.toFixed(2)}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function updateCashOutFee() {
+      const amount = parseFloat(document.getElementById("cashOutAmount").value);
+      if (isNaN(amount) || amount <= 0) return;
+      
+      const fee = calculateFee(amount);
+      const total = amount + fee;
+      const receive = amount;
+      
+      document.getElementById("cashOutFee").innerHTML = `
+        <div style="background: var(--light); padding: 1rem; border-radius: 8px;">
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem;">
+            <span>Cash Out Amount:</span>
+            <span>₱${amount.toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; color: var(--danger);">
+            <span>Fee (5%):</span>
+            <span>₱${fee.toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; margin-bottom: 0.5rem; color: var(--secondary);">
+            <span>You'll Receive:</span>
+            <span>₱${receive.toFixed(2)}</span>
+          </div>
+          <div style="display: flex; justify-content: space-between; font-weight: 600; border-top: 1px solid #ddd; padding-top: 0.5rem;">
+            <span>Total Deduction:</span>
+            <span>₱${total.toFixed(2)}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    function copyToClipboard(elementId) {
+      const text = document.getElementById(elementId).innerText;
+      navigator.clipboard.writeText(text).then(() => {
+        alert("Wallet ID copied to clipboard!");
+      });
+    }
+
+    function validateEmail(email) {
+      const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      return re.test(email);
+    }
+
+    function getBankName(code) {
+      const banks = {
+        'bpi': 'BPI',
+        'bdo': 'BDO',
+        'metrobank': 'Metrobank',
+        'unionbank': 'UnionBank',
+        'landbank': 'Land Bank',
+        'rcbc': 'RCBC'
+      };
+      return banks[code] || code;
+    }
+
+    function getMethodName(code) {
+      const methods = {
+        'gcash': 'GCash',
+        'maya': 'Maya',
+        'palawan': 'Palawan Express',
+        'cebuana': 'Cebuana Lhuillier',
+        'bank': 'Bank Withdrawal'
+      };
+      return methods[code] || code;
+    }
+
+    // Initialize fee calculations
+    document.addEventListener('DOMContentLoaded', function() {
+      // Add event listeners for real-time fee calculations
+      const sendAmount = document.getElementById("sendAmount");
+      const cashOutAmount = document.getElementById("cashOutAmount");
+      
+      if (sendAmount) {
+        sendAmount.addEventListener("input", updateFeeCalculation);
+      }
+      
+      if (cashOutAmount) {
+        cashOutAmount.addEventListener("input", updateCashOutFee);
+      }
+      
+      // Set max date for birthdate to today
+      const today = new Date().toISOString().split('T')[0];
+      const birthdateInput = document.getElementById("signupBirthdate");
+      if (birthdateInput) {
+        birthdateInput.max = today;
+      }
+    });
   </script>
 </body>
 </html>
