@@ -8,17 +8,17 @@ import re
 import secrets
 
 app = Flask(__name__)
-CORS(app, supports_credentials=True, origins=["https://your-app.onrender.com", "http://localhost:3000"])
+CORS(app, supports_credentials=True, origins=["https://cashine-ewallet.onrender.com", "http://localhost:3000"])
 
 # Get secret key from environment or use fallback
 app.secret_key = os.environ.get('SECRET_KEY') or 'dev-secure-key-' + secrets.token_hex(32)
-app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)  # Session timeout
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)
 
 # Configure PostgreSQL database
-DATABASE_URL = os.environ.get('DATABASE_URL') or 'postgresql://cashine_ewallet_user:JFNT45Cuh64Uo8LpTuLJjybZQdoDpsn9@dpg-d4s24imuk2gs73a3nhl0-a/cashine_ewallet'
+DATABASE_URL = os.environ.get('DATABASE_URL')
 
-# Fix URL format
-if DATABASE_URL.startswith('postgres://'):
+# Fix URL format for newer PostgreSQL
+if DATABASE_URL and DATABASE_URL.startswith('postgres://'):
     DATABASE_URL = DATABASE_URL.replace('postgres://', 'postgresql://', 1)
 
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL
@@ -32,6 +32,8 @@ db = SQLAlchemy(app)
 
 # Models
 class User(db.Model):
+    __tablename__ = 'users'
+    
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     email = db.Column(db.String(120), unique=True, nullable=False)
@@ -46,8 +48,10 @@ class User(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Transaction(db.Model):
+    __tablename__ = 'transactions'
+    
     id = db.Column(db.Integer, primary_key=True)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('users.id'), nullable=False)
     type = db.Column(db.String(50), nullable=False)
     amount = db.Column(db.Float, nullable=False)
     fee = db.Column(db.Float, default=0.0)
@@ -67,11 +71,6 @@ def calculate_fee(amount):
 def validate_pin(pin):
     """Validate PIN is 4 digits"""
     return bool(re.match(r'^\d{4}$', pin))
-
-def validate_phone(phone):
-    """Validate phone number format"""
-    # Basic validation for Philippine numbers
-    return bool(re.match(r'^\+?63\d{10}$|^0\d{10}$', phone))
 
 def check_account_lock(user):
     """Check if account is locked due to failed attempts"""
@@ -106,10 +105,6 @@ def register():
         # Validate email
         if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
             return jsonify({'success': False, 'error': 'Invalid email format'}), 400
-        
-        # Validate phone
-        if not validate_phone(phone):
-            return jsonify({'success': False, 'error': 'Invalid phone number format. Use 09XXXXXXXXX or +639XXXXXXXXX'}), 400
         
         # Check if email or phone exists
         if User.query.filter_by(email=email).first():
@@ -575,9 +570,15 @@ def health():
         'database': 'connected' if db.session.execute('SELECT 1').first() else 'disconnected'
     })
 
-# Initialize database
+# Initialize database - WITH FIXED SCHEMA HANDLING
 with app.app_context():
     try:
+        # Drop all tables and recreate them (for development only!)
+        # WARNING: This will delete all data!
+        db.drop_all()
+        print("Dropped all tables")
+        
+        # Create all tables with new schema
         db.create_all()
         print("Database tables created successfully")
         
@@ -600,4 +601,4 @@ with app.app_context():
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
-    app.run(host='0.0.0.0', port=port, debug=True)
+    app.run(host='0.0.0.0', port=port, debug=False)
