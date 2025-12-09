@@ -3,14 +3,16 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 from werkzeug.security import generate_password_hash, check_password_hash
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 import re
+import secrets
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True, origins=["https://your-app.onrender.com", "http://localhost:3000"])
 
 # Get secret key from environment or use fallback
-app.secret_key = os.environ.get('SECRET_KEY') or 'dev-secure-key-' + os.urandom(32).hex()
+app.secret_key = os.environ.get('SECRET_KEY') or 'dev-secure-key-' + secrets.token_hex(32)
+app.config['PERMANENT_SESSION_LIFETIME'] = timedelta(hours=1)  # Session timeout
 
 # Configure PostgreSQL database
 DATABASE_URL = os.environ.get('DATABASE_URL') or 'postgresql://cashine_ewallet_user:JFNT45Cuh64Uo8LpTuLJjybZQdoDpsn9@dpg-d4s24imuk2gs73a3nhl0-a/cashine_ewallet'
@@ -38,7 +40,9 @@ class User(db.Model):
     address = db.Column(db.Text)
     wallet_id = db.Column(db.String(20), unique=True, nullable=False)
     pin_hash = db.Column(db.String(200), nullable=False)
-    balance = db.Column(db.Float, default=500.0)
+    balance = db.Column(db.Float, default=500.0, nullable=False)
+    failed_login_attempts = db.Column(db.Integer, default=0)
+    locked_until = db.Column(db.DateTime, nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
 class Transaction(db.Model):
@@ -54,11 +58,26 @@ class Transaction(db.Model):
     cashout_method = db.Column(db.String(50), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
-# Helper function for fee calculation
-def calculate_fee_percent(amount):
-    """Calculate 5% fee with a minimum of ₱5."""
-    fee = amount * 0.05
-    return max(fee, 5.0)
+# Helper functions
+def calculate_fee(amount):
+    """Calculate 5% fee with minimum ₱5"""
+    fee = amount * 0.05  # 5%
+    return max(fee, 5.0)  # Minimum ₱5
+
+def validate_pin(pin):
+    """Validate PIN is 4 digits"""
+    return bool(re.match(r'^\d{4}$', pin))
+
+def validate_phone(phone):
+    """Validate phone number format"""
+    # Basic validation for Philippine numbers
+    return bool(re.match(r'^\+?63\d{10}$|^0\d{10}$', phone))
+
+def check_account_lock(user):
+    """Check if account is locked due to failed attempts"""
+    if user.locked_until and user.locked_until > datetime.utcnow():
+        return True
+    return False
 
 # Routes
 @app.route('/')
@@ -80,12 +99,17 @@ def register():
         if not all([name, email, phone, pin]):
             return jsonify({'success': False, 'error': 'All fields are required'}), 400
         
-        if len(pin) != 4:
-            return jsonify({'success': False, 'error': 'PIN must be 4 digits'}), 400
+        # Validate PIN
+        if not validate_pin(pin):
+            return jsonify({'success': False, 'error': 'PIN must be exactly 4 digits'}), 400
         
         # Validate email
         if not re.match(r"[^@]+@[^@]+\.[^@]+", email):
             return jsonify({'success': False, 'error': 'Invalid email format'}), 400
+        
+        # Validate phone
+        if not validate_phone(phone):
+            return jsonify({'success': False, 'error': 'Invalid phone number format. Use 09XXXXXXXXX or +639XXXXXXXXX'}), 400
         
         # Check if email or phone exists
         if User.query.filter_by(email=email).first():
@@ -95,7 +119,8 @@ def register():
             return jsonify({'success': False, 'error': 'Phone number already registered'}), 400
         
         # Generate wallet ID
-        wallet_id = f"CASH{datetime.now().strftime('%y%m%d')}{db.session.query(User).count() + 10000}"
+        count = db.session.query(User).count()
+        wallet_id = f"CASH{datetime.now().strftime('%y%m%d')}{count + 10000:04d}"
         
         # Create user
         user = User(
@@ -106,7 +131,8 @@ def register():
             address=address,
             wallet_id=wallet_id,
             pin_hash=generate_password_hash(pin),
-            balance=500.0
+            balance=500.0,
+            failed_login_attempts=0
         )
         
         db.session.add(user)
@@ -133,13 +159,13 @@ def register():
 def login():
     try:
         data = request.get_json()
-        identifier = data.get('identifier')  # Can be email, phone, or wallet_id
+        identifier = data.get('identifier')
         pin = data.get('pin')
         
         if not identifier or not pin:
             return jsonify({'success': False, 'error': 'Identifier and PIN required'}), 400
         
-        # Find user by email, phone, or wallet_id
+        # Find user
         user = User.query.filter(
             (User.email == identifier) | 
             (User.phone == identifier) | 
@@ -149,11 +175,40 @@ def login():
         if not user:
             return jsonify({'success': False, 'error': 'User not found'}), 404
         
+        # Check if account is locked
+        if check_account_lock(user):
+            return jsonify({
+                'success': False, 
+                'error': f'Account locked. Try again at {user.locked_until.strftime("%H:%M:%S")}'
+            }), 423
+        
+        # Check PIN
         if not check_password_hash(user.pin_hash, pin):
-            return jsonify({'success': False, 'error': 'Invalid PIN'}), 401
+            user.failed_login_attempts += 1
+            
+            # Lock account after 5 failed attempts for 15 minutes
+            if user.failed_login_attempts >= 5:
+                user.locked_until = datetime.utcnow() + timedelta(minutes=15)
+                db.session.commit()
+                return jsonify({
+                    'success': False, 
+                    'error': 'Account locked for 15 minutes due to too many failed attempts'
+                }), 423
+            
+            db.session.commit()
+            return jsonify({
+                'success': False, 
+                'error': f'Invalid PIN. {5 - user.failed_login_attempts} attempts remaining'
+            }), 401
+        
+        # Reset failed attempts on successful login
+        user.failed_login_attempts = 0
+        user.locked_until = None
+        db.session.commit()
         
         # Set session
         session['user_id'] = user.id
+        session.permanent = True
         
         return jsonify({
             'success': True,
@@ -218,6 +273,9 @@ def send_money():
         if amount <= 0:
             return jsonify({'success': False, 'error': 'Invalid amount'}), 400
         
+        if amount < 10:
+            return jsonify({'success': False, 'error': 'Minimum amount is ₱10'}), 400
+        
         # Get sender
         sender = User.query.get(user_id)
         if not check_password_hash(sender.pin_hash, pin):
@@ -236,8 +294,19 @@ def send_money():
             return jsonify({'success': False, 'error': 'Cannot send money to yourself'}), 400
         
         # Calculate fee (5% with minimum ₱5)
-        fee = calculate_fee_percent(amount)
+        fee = calculate_fee(amount)
         total_deduction = amount + fee
+        
+        # Check daily limit (₱50,000)
+        today = datetime.utcnow().date()
+        today_sent = db.session.query(db.func.sum(Transaction.amount)).filter(
+            Transaction.user_id == sender.id,
+            Transaction.type == 'Sent',
+            Transaction.created_at >= today
+        ).scalar() or 0
+        
+        if today_sent + amount > 50000:
+            return jsonify({'success': False, 'error': 'Daily sending limit exceeded (₱50,000)'}), 400
         
         if sender.balance < total_deduction:
             return jsonify({'success': False, 'error': 'Insufficient balance'}), 400
@@ -299,6 +368,9 @@ def bank_transfer():
         if amount <= 0:
             return jsonify({'success': False, 'error': 'Invalid amount'}), 400
         
+        if amount < 100:
+            return jsonify({'success': False, 'error': 'Minimum bank transfer is ₱100'}), 400
+        
         user = User.query.get(user_id)
         if not check_password_hash(user.pin_hash, pin):
             return jsonify({'success': False, 'error': 'Invalid PIN'}), 401
@@ -352,12 +424,15 @@ def cash_out():
         if amount <= 0:
             return jsonify({'success': False, 'error': 'Invalid amount'}), 400
         
+        if amount < 50:
+            return jsonify({'success': False, 'error': 'Minimum cash out is ₱50'}), 400
+        
         user = User.query.get(user_id)
         if not check_password_hash(user.pin_hash, pin):
             return jsonify({'success': False, 'error': 'Invalid PIN'}), 401
         
         # Calculate fee (5% with minimum ₱5)
-        fee = calculate_fee_percent(amount)
+        fee = calculate_fee(amount)
         total_deduction = amount + fee
         
         if user.balance < total_deduction:
@@ -413,10 +488,10 @@ def get_transactions():
     })
 
 @app.route('/api/calculate-fee', methods=['POST'])
-def calculate_fee():
+def calculate_fee_endpoint():
     data = request.get_json()
     amount = float(data.get('amount', 0))
-    transaction_type = data.get('type', 'send')  # send, cashout, bank
+    transaction_type = data.get('type', 'send')
     
     if amount <= 0:
         return jsonify({'success': False, 'error': 'Invalid amount'}), 400
@@ -424,7 +499,7 @@ def calculate_fee():
     if transaction_type == 'bank':
         fee = 25.0
     else:
-        fee = calculate_fee_percent(amount)
+        fee = calculate_fee(amount)
     
     return jsonify({
         'success': True,
@@ -436,6 +511,10 @@ def calculate_fee():
 @app.route('/api/users/search', methods=['POST'])
 def search_users():
     try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+        
         data = request.get_json()
         query = data.get('query', '').strip()
         
@@ -446,7 +525,7 @@ def search_users():
             (User.wallet_id.ilike(f'%{query}%')) |
             (User.phone.ilike(f'%{query}%')) |
             (User.name.ilike(f'%{query}%'))
-        ).limit(10).all()
+        ).filter(User.id != user_id).limit(10).all()
         
         return jsonify({
             'success': True,
@@ -458,6 +537,33 @@ def search_users():
         })
         
     except Exception as e:
+        return jsonify({'success': False, 'error': str(e)}), 500
+
+@app.route('/api/update-pin', methods=['POST'])
+def update_pin():
+    try:
+        user_id = session.get('user_id')
+        if not user_id:
+            return jsonify({'success': False, 'error': 'Not authenticated'}), 401
+        
+        data = request.get_json()
+        old_pin = data.get('old_pin')
+        new_pin = data.get('new_pin')
+        
+        user = User.query.get(user_id)
+        if not check_password_hash(user.pin_hash, old_pin):
+            return jsonify({'success': False, 'error': 'Invalid current PIN'}), 401
+        
+        if not validate_pin(new_pin):
+            return jsonify({'success': False, 'error': 'New PIN must be exactly 4 digits'}), 400
+        
+        user.pin_hash = generate_password_hash(new_pin)
+        db.session.commit()
+        
+        return jsonify({'success': True, 'message': 'PIN updated successfully'})
+        
+    except Exception as e:
+        db.session.rollback()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 @app.route('/health')
