@@ -732,182 +732,204 @@
     </div>
   </div>
 
-  <script>
-    // Initialize users from localStorage
-    let users = JSON.parse(localStorage.getItem('cashine_users')) || [];
+<script>
+    const API_BASE = ''; // Empty because same domain, or use your Render URL
+    
     let currentUser = null;
-
+    
     // Toggle between login and signup
     function toggleAuth() {
       document.getElementById("authSection").classList.toggle("hidden");
       document.getElementById("signupSection").classList.toggle("hidden");
     }
-
+    
     // Calculate fees (5% or ₱5 per ₱100)
     function calculateFee(amount) {
       return Math.ceil(amount / 100) * 5;
     }
-
-    // Signup function with new fields
-    function signup() {
+    
+    // Signup function with API call
+    async function signup() {
       const name = document.getElementById("signupName").value.trim();
       const email = document.getElementById("signupEmail").value.trim();
       const phone = document.getElementById("signupPhone").value.trim();
       const birthdate = document.getElementById("signupBirthdate").value;
       const address = document.getElementById("signupAddress").value.trim();
       const pin = document.getElementById("signupPIN").value.trim();
-
+      
       if (!name || !email || !phone || !birthdate || !address || pin.length !== 4) {
         alert("Please fill all fields correctly. PIN must be 4 digits.");
         return;
       }
-
-      // Validate email format
+      
       if (!validateEmail(email)) {
         alert("Please enter a valid email address.");
         return;
       }
-
-      // Check if email or phone already exists
-      if (users.some(u => u.email === email)) {
-        alert("Email already registered. Please use a different email.");
-        return;
+      
+      try {
+        const response = await fetch(`${API_BASE}/api/register`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email, phone, birthdate, address, pin }),
+          credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          alert(`✅ Account created successfully!\n\nYour Wallet ID: ${data.user.wallet_id}\nStarting Balance: ₱500.00\n\nPlease keep your Wallet ID and PIN safe.`);
+          
+          // Clear form and show login
+          document.getElementById("signupName").value = "";
+          document.getElementById("signupEmail").value = "";
+          document.getElementById("signupPhone").value = "";
+          document.getElementById("signupBirthdate").value = "";
+          document.getElementById("signupAddress").value = "";
+          document.getElementById("signupPIN").value = "";
+          
+          toggleAuth();
+        } else {
+          alert(`❌ Error: ${data.error}`);
+        }
+      } catch (error) {
+        alert("❌ Network error. Please try again.");
+        console.error(error);
       }
-      
-      if (users.some(u => u.phone === phone)) {
-        alert("Phone number already registered.");
-        return;
-      }
-
-      // Generate wallet ID
-      const walletID = "CASH" + Math.floor(10000000 + Math.random() * 90000000);
-      
-      // Create user object
-      const user = { 
-        name, 
-        email, 
-        phone, 
-        birthdate, 
-        address, 
-        walletID, 
-        pin, 
-        balance: 500, // Starting balance
-        transactions: [] 
-      };
-      
-      users.push(user);
-      localStorage.setItem('cashine_users', JSON.stringify(users));
-      
-      alert(`✅ Account created successfully!\n\nYour Wallet ID: ${walletID}\nStarting Balance: ₱500.00\n\nPlease keep your Wallet ID and PIN safe.`);
-      
-      // Clear form and show login
-      document.getElementById("signupName").value = "";
-      document.getElementById("signupEmail").value = "";
-      document.getElementById("signupPhone").value = "";
-      document.getElementById("signupBirthdate").value = "";
-      document.getElementById("signupAddress").value = "";
-      document.getElementById("signupPIN").value = "";
-      
-      toggleAuth();
     }
-
-    // Login function
-    function login() {
+    
+    // Login function with API call
+    async function login() {
       const id = document.getElementById("loginID").value.trim();
       const pin = document.getElementById("loginPIN").value.trim();
       
-      currentUser = users.find(u => 
-        (u.phone === id || u.walletID === id) && u.pin === pin
-      );
-      
-      if (!currentUser) {
-        alert("❌ Invalid credentials. Please check your ID/Phone and PIN.");
+      if (!id || !pin) {
+        alert("Please enter your ID/Phone and PIN.");
         return;
       }
       
-      // Show dashboard
-      document.getElementById("authSection").classList.add("hidden");
-      document.getElementById("signupSection").classList.add("hidden");
-      document.getElementById("dashboard").classList.remove("hidden");
-      
-      // Update dashboard info
-      document.getElementById("welcomeMsg").innerText = `Welcome, ${currentUser.name}!`;
-      document.getElementById("walletBalance").innerText = currentUser.balance.toFixed(2);
-      document.getElementById("myWalletID").innerText = currentUser.walletID;
-    }
-
-    // Logout function
-    function logout() {
-      if (confirm("Are you sure you want to logout?")) {
-        currentUser = null;
-        document.getElementById("dashboard").classList.add("hidden");
-        document.getElementById("authSection").classList.remove("hidden");
+      try {
+        const response = await fetch(`${API_BASE}/api/login`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ identifier: id, pin }),
+          credentials: 'include'
+        });
         
-        // Clear login form
-        document.getElementById("loginID").value = "";
-        document.getElementById("loginPIN").value = "";
+        const data = await response.json();
+        
+        if (data.success) {
+          currentUser = data.user;
+          
+          // Show dashboard
+          document.getElementById("authSection").classList.add("hidden");
+          document.getElementById("signupSection").classList.add("hidden");
+          document.getElementById("dashboard").classList.remove("hidden");
+          
+          // Update dashboard info
+          document.getElementById("welcomeMsg").innerText = `Welcome, ${currentUser.name}!`;
+          document.getElementById("walletBalance").innerText = currentUser.balance.toFixed(2);
+          document.getElementById("myWalletID").innerText = currentUser.wallet_id;
+        } else {
+          alert(`❌ Login failed: ${data.error}`);
+        }
+      } catch (error) {
+        alert("❌ Network error. Please try again.");
+        console.error(error);
       }
     }
-
+    
+    // Logout function
+    async function logout() {
+      if (confirm("Are you sure you want to logout?")) {
+        try {
+          await fetch(`${API_BASE}/api/logout`, {
+            method: 'POST',
+            credentials: 'include'
+          });
+          
+          currentUser = null;
+          document.getElementById("dashboard").classList.add("hidden");
+          document.getElementById("authSection").classList.remove("hidden");
+          
+          // Clear login form
+          document.getElementById("loginID").value = "";
+          document.getElementById("loginPIN").value = "";
+        } catch (error) {
+          console.error(error);
+        }
+      }
+    }
+    
     // Modal functions
     function showSend() {
       document.getElementById("sendModal").classList.remove("hidden");
       document.getElementById("sendAmount").addEventListener("input", updateFeeCalculation);
     }
-
+    
     function showBankTransfer() {
       document.getElementById("bankTransferModal").classList.remove("hidden");
     }
-
+    
     function showCashOut() {
       document.getElementById("cashOutModal").classList.remove("hidden");
       document.getElementById("cashOutAmount").addEventListener("input", updateCashOutFee);
     }
-
-    function showTransactions() {
+    
+    async function showTransactions() {
+      try {
+        const response = await fetch(`${API_BASE}/api/transactions`, {
+          credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          loadTransactionHistory(data.transactions);
+        } else {
+          alert("❌ Failed to load transactions.");
+        }
+      } catch (error) {
+        alert("❌ Network error.");
+        console.error(error);
+      }
+      
       document.getElementById("transactionsModal").classList.remove("hidden");
-      loadTransactionHistory();
     }
-
+    
     function showProfile() {
       if (currentUser) {
         document.getElementById("profileName").innerText = currentUser.name;
-        document.getElementById("profileWalletID").innerText = `Wallet ID: ${currentUser.walletID}`;
+        document.getElementById("profileWalletID").innerText = `Wallet ID: ${currentUser.wallet_id}`;
         document.getElementById("profileEmail").value = currentUser.email;
         document.getElementById("profilePhone").value = currentUser.phone;
-        document.getElementById("profileBirthdate").value = currentUser.birthdate;
-        document.getElementById("profileAddress").value = currentUser.address;
+        document.getElementById("profileBirthdate").value = currentUser.birthdate || '';
+        document.getElementById("profileAddress").value = currentUser.address || '';
         document.getElementById("profileModal").classList.remove("hidden");
       }
     }
-
+    
     function showReceive() {
       if (currentUser) {
-        document.getElementById("receiveWalletID").innerText = currentUser.walletID;
+        document.getElementById("receiveWalletID").innerText = currentUser.wallet_id;
         document.getElementById("receivePhone").innerText = currentUser.phone;
         document.getElementById("receiveModal").classList.remove("hidden");
       }
     }
-
+    
     function closeModal(modalId) {
       document.getElementById(modalId).classList.add("hidden");
     }
-
-    // Send money with fee calculation
-    function sendMoney() {
+    
+    // Send money with API call
+    async function sendMoney() {
       const to = document.getElementById("sendTo").value.trim();
       const amount = parseFloat(document.getElementById("sendAmount").value);
       const purpose = document.getElementById("sendPurpose").value.trim() || "Money Transfer";
       const pin = document.getElementById("sendPIN").value.trim();
       
-      // Validations
-      if (pin !== currentUser.pin) {
-        alert("❌ Wrong PIN. Please try again.");
-        return;
-      }
-      
-      if (isNaN(amount) || amount <= 0) {
-        alert("❌ Please enter a valid amount.");
+      if (!to || isNaN(amount) || amount <= 0 || !pin) {
+        alert("❌ Please fill all fields correctly.");
         return;
       }
       
@@ -916,195 +938,135 @@
         return;
       }
       
-      // Calculate fee
-      const fee = calculateFee(amount);
-      const totalDeduction = amount + fee;
-      
-      if (totalDeduction > currentUser.balance) {
-        alert(`❌ Insufficient balance.\n\nAmount: ₱${amount.toFixed(2)}\nFee: ₱${fee.toFixed(2)}\nTotal: ₱${totalDeduction.toFixed(2)}\nAvailable: ₱${currentUser.balance.toFixed(2)}`);
-        return;
+      try {
+        const response = await fetch(`${API_BASE}/api/send-money`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ to, amount, purpose, pin }),
+          credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          // Update current user balance
+          currentUser.balance = data.new_balance;
+          document.getElementById("walletBalance").innerText = currentUser.balance.toFixed(2);
+          
+          alert(`✅ ${data.message}\n\nFee: ₱${data.fee.toFixed(2)}\nNew Balance: ₱${data.new_balance.toFixed(2)}`);
+          
+          // Clear form and close modal
+          document.getElementById("sendTo").value = "";
+          document.getElementById("sendAmount").value = "";
+          document.getElementById("sendPurpose").value = "";
+          document.getElementById("sendPIN").value = "";
+          document.getElementById("feeCalculation").innerHTML = "";
+          
+          closeModal("sendModal");
+        } else {
+          alert(`❌ Error: ${data.error}`);
+        }
+      } catch (error) {
+        alert("❌ Network error. Please try again.");
+        console.error(error);
       }
-      
-      // Find recipient
-      const recipient = users.find(u => u.walletID === to || u.phone === to);
-      
-      if (!recipient) {
-        alert("❌ Recipient not found. Please check the Wallet ID or Phone number.");
-        return;
-      }
-      
-      if (recipient.walletID === currentUser.walletID) {
-        alert("❌ You cannot send money to yourself.");
-        return;
-      }
-      
-      // Process transaction
-      currentUser.balance -= totalDeduction;
-      recipient.balance += amount;
-      
-      // Add transaction to sender
-      const senderTransaction = {
-        type: "Sent",
-        amount: -amount,
-        fee: -fee,
-        note: `To ${recipient.name} (${purpose})`,
-        date: new Date().toLocaleString(),
-        recipient: recipient.name,
-        total: -totalDeduction
-      };
-      
-      currentUser.transactions.push(senderTransaction);
-      
-      // Add transaction to recipient
-      const recipientTransaction = {
-        type: "Received",
-        amount: amount,
-        fee: 0,
-        note: `From ${currentUser.name} (${purpose})`,
-        date: new Date().toLocaleString(),
-        sender: currentUser.name,
-        total: amount
-      };
-      
-      recipient.transactions.push(recipientTransaction);
-      
-      // Save to localStorage
-      localStorage.setItem('cashine_users', JSON.stringify(users));
-      
-      // Update UI
-      document.getElementById("walletBalance").innerText = currentUser.balance.toFixed(2);
-      
-      // Show success message
-      alert(`✅ Money sent successfully!\n\nAmount: ₱${amount.toFixed(2)}\nFee: ₱${fee.toFixed(2)}\nRecipient: ${recipient.name}\nNew Balance: ₱${currentUser.balance.toFixed(2)}`);
-      
-      // Clear form and close modal
-      document.getElementById("sendTo").value = "";
-      document.getElementById("sendAmount").value = "";
-      document.getElementById("sendPurpose").value = "";
-      document.getElementById("sendPIN").value = "";
-      document.getElementById("feeCalculation").innerHTML = "";
-      
-      closeModal("sendModal");
     }
-
-    // Process bank transfer
-    function processBankTransfer() {
+    
+    // Process bank transfer with API call
+    async function processBankTransfer() {
       const bank = document.getElementById("bankSelect").value;
       const account = document.getElementById("bankAccount").value.trim();
       const accountName = document.getElementById("bankAccountName").value.trim();
       const amount = parseFloat(document.getElementById("bankAmount").value);
       const pin = document.getElementById("bankPIN").value.trim();
       
-      if (!bank || !account || !accountName || isNaN(amount) || amount <= 0) {
+      if (!bank || !account || !accountName || isNaN(amount) || amount <= 0 || !pin) {
         alert("❌ Please fill all fields correctly.");
         return;
       }
       
-      if (pin !== currentUser.pin) {
-        alert("❌ Wrong PIN. Please try again.");
-        return;
+      try {
+        const response = await fetch(`${API_BASE}/api/bank-transfer`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ bank, account, account_name: accountName, amount, pin }),
+          credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          // Update current user balance
+          currentUser.balance = data.new_balance;
+          document.getElementById("walletBalance").innerText = currentUser.balance.toFixed(2);
+          
+          alert(`✅ ${data.message}\n\nTransfer will be processed within 24 hours.\nNew Balance: ₱${data.new_balance.toFixed(2)}`);
+          
+          // Clear form and close modal
+          document.getElementById("bankSelect").value = "";
+          document.getElementById("bankAccount").value = "";
+          document.getElementById("bankAccountName").value = "";
+          document.getElementById("bankAmount").value = "";
+          document.getElementById("bankPIN").value = "";
+          
+          closeModal("bankTransferModal");
+        } else {
+          alert(`❌ Error: ${data.error}`);
+        }
+      } catch (error) {
+        alert("❌ Network error. Please try again.");
+        console.error(error);
       }
-      
-      const fee = 25; // Flat fee for bank transfer
-      const totalDeduction = amount + fee;
-      
-      if (totalDeduction > currentUser.balance) {
-        alert(`❌ Insufficient balance.\n\nAmount: ₱${amount.toFixed(2)}\nFee: ₱${fee.toFixed(2)}\nTotal: ₱${totalDeduction.toFixed(2)}\nAvailable: ₱${currentUser.balance.toFixed(2)}`);
-        return;
-      }
-      
-      // Process transfer
-      currentUser.balance -= totalDeduction;
-      
-      // Add transaction
-      const transaction = {
-        type: "Bank Transfer",
-        amount: -amount,
-        fee: -fee,
-        note: `To ${getBankName(bank)} - ${accountName}`,
-        date: new Date().toLocaleString(),
-        bank: getBankName(bank),
-        account: account,
-        total: -totalDeduction
-      };
-      
-      currentUser.transactions.push(transaction);
-      localStorage.setItem('cashine_users', JSON.stringify(users));
-      
-      // Update UI
-      document.getElementById("walletBalance").innerText = currentUser.balance.toFixed(2);
-      
-      alert(`✅ Bank transfer initiated!\n\nAmount: ₱${amount.toFixed(2)}\nFee: ₱${fee.toFixed(2)}\nBank: ${getBankName(bank)}\nAccount: ${account}\nTransfer will be processed within 24 hours.`);
-      
-      // Clear form and close modal
-      document.getElementById("bankSelect").value = "";
-      document.getElementById("bankAccount").value = "";
-      document.getElementById("bankAccountName").value = "";
-      document.getElementById("bankAmount").value = "";
-      document.getElementById("bankPIN").value = "";
-      
-      closeModal("bankTransferModal");
     }
-
-    // Process cash out
-    function processCashOut() {
+    
+    // Process cash out with API call
+    async function processCashOut() {
       const amount = parseFloat(document.getElementById("cashOutAmount").value);
       const method = document.getElementById("cashOutMethod").value;
       const pin = document.getElementById("cashOutPIN").value.trim();
       
-      if (isNaN(amount) || amount <= 0) {
-        alert("❌ Please enter a valid amount.");
+      if (isNaN(amount) || amount <= 0 || !pin) {
+        alert("❌ Please enter a valid amount and PIN.");
         return;
       }
       
-      if (pin !== currentUser.pin) {
-        alert("❌ Wrong PIN. Please try again.");
-        return;
+      try {
+        const response = await fetch(`${API_BASE}/api/cash-out`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ amount, method, pin }),
+          credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          // Update current user balance
+          currentUser.balance = data.new_balance;
+          document.getElementById("walletBalance").innerText = currentUser.balance.toFixed(2);
+          
+          alert(`✅ ${data.message}\n\nYou'll receive: ₱${data.you_receive.toFixed(2)}\nFee: ₱${data.fee.toFixed(2)}\nNew Balance: ₱${data.new_balance.toFixed(2)}`);
+          
+          // Clear form and close modal
+          document.getElementById("cashOutAmount").value = "";
+          document.getElementById("cashOutPIN").value = "";
+          document.getElementById("cashOutFee").innerHTML = "";
+          
+          closeModal("cashOutModal");
+        } else {
+          alert(`❌ Error: ${data.error}`);
+        }
+      } catch (error) {
+        alert("❌ Network error. Please try again.");
+        console.error(error);
       }
-      
-      const fee = calculateFee(amount);
-      const totalDeduction = amount + fee;
-      
-      if (totalDeduction > currentUser.balance) {
-        alert(`❌ Insufficient balance.\n\nAmount: ₱${amount.toFixed(2)}\nFee: ₱${fee.toFixed(2)}\nTotal: ₱${totalDeduction.toFixed(2)}\nAvailable: ₱${currentUser.balance.toFixed(2)}`);
-        return;
-      }
-      
-      // Process cash out
-      currentUser.balance -= totalDeduction;
-      
-      // Add transaction
-      const transaction = {
-        type: "Cash Out",
-        amount: -amount,
-        fee: -fee,
-        note: `Via ${getMethodName(method)}`,
-        date: new Date().toLocaleString(),
-        method: getMethodName(method),
-        total: -totalDeduction
-      };
-      
-      currentUser.transactions.push(transaction);
-      localStorage.setItem('cashine_users', JSON.stringify(users));
-      
-      // Update UI
-      document.getElementById("walletBalance").innerText = currentUser.balance.toFixed(2);
-      
-      alert(`✅ Cash out request submitted!\n\nAmount: ₱${amount.toFixed(2)}\nFee: ₱${fee.toFixed(2)}\nMethod: ${getMethodName(method)}\nYou will receive the funds within 2 hours.`);
-      
-      // Clear form and close modal
-      document.getElementById("cashOutAmount").value = "";
-      document.getElementById("cashOutPIN").value = "";
-      document.getElementById("cashOutFee").innerHTML = "";
-      
-      closeModal("cashOutModal");
     }
-
+    
     // Load transaction history
-    function loadTransactionHistory() {
+    function loadTransactionHistory(transactions) {
       const list = document.getElementById("transactionList");
       
-      if (!currentUser.transactions || currentUser.transactions.length === 0) {
+      if (!transactions || transactions.length === 0) {
         list.innerHTML = `
           <div style="text-align: center; padding: 3rem 1rem; color: var(--gray);">
             <i class="fas fa-history" style="font-size: 3rem; margin-bottom: 1rem;"></i>
@@ -1114,12 +1076,7 @@
         return;
       }
       
-      // Sort transactions by date (newest first)
-      const sortedTransactions = [...currentUser.transactions].sort((a, b) => 
-        new Date(b.date) - new Date(a.date)
-      );
-      
-      list.innerHTML = sortedTransactions.map(t => {
+      list.innerHTML = transactions.map(t => {
         const isPositive = t.amount > 0;
         const typeClass = isPositive ? 'received' : t.type === 'Cash Out' ? 'fee' : 'sent';
         const sign = isPositive ? '+' : '';
@@ -1140,7 +1097,7 @@
         `;
       }).join("");
     }
-
+    
     // Utility functions
     function updateFeeCalculation() {
       const amount = parseFloat(document.getElementById("sendAmount").value);
@@ -1166,7 +1123,7 @@
         </div>
       `;
     }
-
+    
     function updateCashOutFee() {
       const amount = parseFloat(document.getElementById("cashOutAmount").value);
       if (isNaN(amount) || amount <= 0) return;
@@ -1196,19 +1153,19 @@
         </div>
       `;
     }
-
+    
     function copyToClipboard(elementId) {
       const text = document.getElementById(elementId).innerText;
       navigator.clipboard.writeText(text).then(() => {
         alert("Wallet ID copied to clipboard!");
       });
     }
-
+    
     function validateEmail(email) {
       const re = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
       return re.test(email);
     }
-
+    
     function getBankName(code) {
       const banks = {
         'bpi': 'BPI',
@@ -1220,7 +1177,7 @@
       };
       return banks[code] || code;
     }
-
+    
     function getMethodName(code) {
       const methods = {
         'gcash': 'GCash',
@@ -1231,9 +1188,35 @@
       };
       return methods[code] || code;
     }
-
-    // Initialize fee calculations
+    
+    // Check if user is already logged in on page load
+    async function checkAuthStatus() {
+      try {
+        const response = await fetch(`${API_BASE}/api/current-user`, {
+          credentials: 'include'
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          currentUser = data.user;
+          document.getElementById("authSection").classList.add("hidden");
+          document.getElementById("signupSection").classList.add("hidden");
+          document.getElementById("dashboard").classList.remove("hidden");
+          document.getElementById("welcomeMsg").innerText = `Welcome, ${currentUser.name}!`;
+          document.getElementById("walletBalance").innerText = currentUser.balance.toFixed(2);
+          document.getElementById("myWalletID").innerText = currentUser.wallet_id;
+        }
+      } catch (error) {
+        // Not logged in, show login form
+        console.log("User not authenticated");
+      }
+    }
+    
+    // Initialize on page load
     document.addEventListener('DOMContentLoaded', function() {
+      checkAuthStatus();
+      
       // Add event listeners for real-time fee calculations
       const sendAmount = document.getElementById("sendAmount");
       const cashOutAmount = document.getElementById("cashOutAmount");
@@ -1256,3 +1239,4 @@
   </script>
 </body>
 </html>
+
