@@ -1,988 +1,335 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cashine eWallet - Online Banking</title>
-    <!-- All CSS in one file -->
-    <style>
-        /* ===== CSS RESET & BASE ===== */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        
-        :root {
-            --primary: #2D5BFF;
-            --primary-dark: #1A49CC;
-            --secondary: #00D4AA;
-            --danger: #FF3B5C;
-            --warning: #FF9F1C;
-            --light: #F8F9FA;
-            --dark: #212529;
-            --gray: #6C757D;
-            --light-gray: #E9ECEF;
-            --white: #FFFFFF;
-            --shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            --radius: 12px;
-        }
-        
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            min-height: 100vh;
-            padding: 20px;
-        }
-        
-        /* ===== LAYOUT ===== */
-        .container {
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .app-wrapper {
-            background: var(--white);
-            border-radius: var(--radius);
-            box-shadow: var(--shadow);
-            overflow: hidden;
-            min-height: 90vh;
-        }
-        
-        /* ===== HEADER ===== */
-        .header {
-            background: var(--primary);
-            color: var(--white);
-            padding: 20px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .logo {
-            font-size: 24px;
-            font-weight: bold;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .logo-icon {
-            background: var(--white);
-            color: var(--primary);
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-        }
-        
-        .user-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .balance-display {
-            background: rgba(255, 255, 255, 0.2);
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-weight: 600;
-        }
-        
-        .logout-btn {
-            background: var(--danger);
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            border-radius: 20px;
-            cursor: pointer;
-            font-weight: 600;
-        }
-        
-        /* ===== MAIN CONTENT ===== */
-        .content {
-            display: grid;
-            grid-template-columns: 1fr 2fr;
-            gap: 30px;
-            padding: 30px;
-        }
-        
-        @media (max-width: 768px) {
-            .content {
-                grid-template-columns: 1fr;
-            }
-        }
-        
-        /* ===== SIDEBAR ===== */
-        .sidebar {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-        }
-        
-        .card {
-            background: var(--light);
-            border-radius: var(--radius);
-            padding: 25px;
-            box-shadow: var(--shadow);
-        }
-        
-        .card h3 {
-            color: var(--dark);
-            margin-bottom: 20px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid var(--primary);
-        }
-        
-        /* ===== FORMS ===== */
-        .form-group {
-            margin-bottom: 20px;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            color: var(--dark);
-            font-weight: 600;
-        }
-        
-        .form-control {
-            width: 100%;
-            padding: 12px 15px;
-            border: 2px solid var(--light-gray);
-            border-radius: 8px;
-            font-size: 16px;
-            transition: border-color 0.3s;
-        }
-        
-        .form-control:focus {
-            outline: none;
-            border-color: var(--primary);
-        }
-        
-        /* ===== BUTTONS ===== */
-        .btn {
-            padding: 12px 24px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-        }
-        
-        .btn-primary {
-            background: var(--primary);
-            color: white;
-        }
-        
-        .btn-primary:hover {
-            background: var(--primary-dark);
-            transform: translateY(-2px);
-        }
-        
-        .btn-success {
-            background: var(--secondary);
-            color: white;
-        }
-        
-        .btn-warning {
-            background: var(--warning);
-            color: white;
-        }
-        
-        .btn-danger {
-            background: var(--danger);
-            color: white;
-        }
-        
-        .btn-block {
-            width: 100%;
-        }
-        
-        /* ===== TABS ===== */
-        .tabs {
-            display: flex;
-            border-bottom: 2px solid var(--light-gray);
-            margin-bottom: 25px;
-        }
-        
-        .tab {
-            padding: 12px 25px;
-            background: none;
-            border: none;
-            font-size: 16px;
-            font-weight: 600;
-            color: var(--gray);
-            cursor: pointer;
-            position: relative;
-        }
-        
-        .tab.active {
-            color: var(--primary);
-        }
-        
-        .tab.active::after {
-            content: '';
-            position: absolute;
-            bottom: -2px;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: var(--primary);
-        }
-        
-        .tab-content {
-            display: none;
-        }
-        
-        .tab-content.active {
-            display: block;
-        }
-        
-        /* ===== TRANSACTIONS ===== */
-        .transaction-list {
-            max-height: 500px;
-            overflow-y: auto;
-        }
-        
-        .transaction-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px;
-            border-bottom: 1px solid var(--light-gray);
-        }
-        
-        .transaction-item:last-child {
-            border-bottom: none;
-        }
-        
-        .transaction-info h4 {
-            color: var(--dark);
-            margin-bottom: 5px;
-        }
-        
-        .transaction-info p {
-            color: var(--gray);
-            font-size: 14px;
-        }
-        
-        .transaction-amount {
-            font-weight: 600;
-            font-size: 18px;
-        }
-        
-        .transaction-amount.positive {
-            color: var(--secondary);
-        }
-        
-        .transaction-amount.negative {
-            color: var(--danger);
-        }
-        
-        /* ===== AUTH FORMS ===== */
-        .auth-container {
-            max-width: 500px;
-            margin: 50px auto;
-            padding: 40px;
-        }
-        
-        .auth-form {
-            text-align: center;
-        }
-        
-        .auth-form h2 {
-            margin-bottom: 30px;
-            color: var(--dark);
-        }
-        
-        /* ===== ALERTS ===== */
-        .alert {
-            padding: 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-        
-        .alert-success {
-            background: rgba(0, 212, 170, 0.1);
-            color: var(--secondary);
-            border: 1px solid var(--secondary);
-        }
-        
-        .alert-error {
-            background: rgba(255, 59, 92, 0.1);
-            color: var(--danger);
-            border: 1px solid var(--danger);
-        }
-        
-        .close-alert {
-            background: none;
-            border: none;
-            font-size: 20px;
-            cursor: pointer;
-            color: inherit;
-        }
-        
-        /* ===== LOADING ===== */
-        .loading {
-            text-align: center;
-            padding: 40px;
-            color: var(--gray);
-        }
-        
-        .spinner {
-            border: 3px solid var(--light-gray);
-            border-top: 3px solid var(--primary);
-            border-radius: 50%;
-            width: 40px;
-            height: 40px;
-            animation: spin 1s linear infinite;
-            margin: 0 auto 20px;
-        }
-        
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        /* ===== UTILITIES ===== */
-        .hidden {
-            display: none !important;
-        }
-        
-        .text-center {
-            text-align: center;
-        }
-        
-        .mb-3 { margin-bottom: 15px; }
-        .mb-4 { margin-bottom: 20px; }
-        .mb-5 { margin-bottom: 25px; }
-        
-        .mt-3 { margin-top: 15px; }
-        .mt-4 { margin-top: 20px; }
-        .mt-5 { margin-top: 25px; }
-        
-        .d-flex {
-            display: flex;
-        }
-        
-        .flex-column {
-            flex-direction: column;
-        }
-        
-        .align-center {
-            align-items: center;
-        }
-        
-        .justify-between {
-            justify-content: space-between;
-        }
-        
-        .gap-2 { gap: 10px; }
-        .gap-3 { gap: 15px; }
-        .gap-4 { gap: 20px; }
-        
-        /* ===== RESPONSIVE ===== */
-        @media (max-width: 576px) {
-            .header {
-                flex-direction: column;
-                gap: 15px;
-                text-align: center;
-            }
-            
-            .content {
-                padding: 20px;
-            }
-            
-            .auth-container {
-                padding: 20px;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <title>Cashine - Secure eWallet</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0; padding: 0;
+      background: linear-gradient(135deg, #e3f2fd, #f0f2f5);
+      color: #333;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1e3c72, #2a5298);
+      color: white;
+      padding: 1.5rem 1rem;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.8rem;
+      letter-spacing: 1px;
+    }
+    header p {
+      margin: 0.3rem 0 0;
+      font-size: 0.9rem;
+      opacity: 0.85;
+    }
+
+    .container {
+      max-width: 420px;
+      margin: 2rem auto;
+      background: #fff;
+      padding: 2rem;
+      border-radius: 15px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
+      animation: fadeIn 0.4s ease-in-out;
+    }
+
+    h2 {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      color: #2a5298;
+      font-weight: 600;
+    }
+
+    input {
+      width: 100%; padding: 12px 14px;
+      margin: 0.5rem 0;
+      border: 1px solid #ddd; 
+      border-radius: 8px;
+      font-size: 0.95rem;
+      transition: border 0.3s;
+    }
+    input:focus {
+      border-color: #2a5298;
+      outline: none;
+      box-shadow: 0 0 5px rgba(42,82,152,0.3);
+    }
+
+    button {
+      width: 100%;
+      padding: 12px;
+      margin: 0.6rem 0;
+      border: none; 
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.3s, transform 0.1s;
+    }
+    button:hover {
+      transform: translateY(-2px);
+    }
+    button:active {
+      transform: scale(0.97);
+    }
+
+    button.primary {
+      background: #2a5298;
+      color: #fff;
+    }
+    button.primary:hover {
+      background: #1e3c72;
+    }
+
+    button.secondary {
+      background: #f0f2f5;
+      color: #333;
+    }
+    button.secondary:hover {
+      background: #e3e6eb;
+    }
+
+    .dashboard h2 {
+      color: #222;
+    }
+    .balance {
+      font-size: 1.6rem;
+      font-weight: bold;
+      margin: 1.2rem 0;
+      color: #2a5298;
+      background: #f4f8ff;
+      padding: 0.8rem;
+      border-radius: 10px;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.05);
+    }
+
+    .transactions {
+      text-align: left;
+      margin-top: 1rem;
+      max-height: 200px;
+      overflow-y: auto;
+      border-top: 1px solid #eee;
+      padding-top: 0.8rem;
+    }
+    .transaction {
+      font-size: 0.9rem;
+      padding: 0.6rem;
+      border-radius: 6px;
+      margin-bottom: 0.4rem;
+      background: #f9f9f9;
+      transition: background 0.2s;
+    }
+    .transaction:hover {
+      background: #eef4ff;
+    }
+
+    a {
+      color: #2a5298;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
+
+    .hidden { display: none; }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
 </head>
 <body>
-    <div class="container">
-        <div class="app-wrapper" id="app">
-            <!-- Login/Register Screen -->
-            <div id="authScreen" class="auth-container">
-                <div class="auth-form">
-                    <h2>Welcome to Cashine eWallet</h2>
-                    <p class="mb-4">Secure online banking and money transfers</p>
-                    
-                    <div id="authAlert" class="alert hidden"></div>
-                    
-                    <div class="tabs mb-4">
-                        <button class="tab active" onclick="switchAuthTab('login')">Login</button>
-                        <button class="tab" onclick="switchAuthTab('register')">Register</button>
-                    </div>
-                    
-                    <!-- Login Form -->
-                    <form id="loginForm" class="tab-content active">
-                        <div class="form-group">
-                            <label>Username</label>
-                            <input type="text" class="form-control" id="loginUsername" placeholder="Enter username" required>
-                        </div>
-                        <button type="submit" class="btn btn-primary btn-block">
-                            <span class="btn-text">Login</span>
-                            <span class="btn-spinner hidden">Logging in...</span>
-                        </button>
-                        <p class="mt-3 text-center">
-                            <small>Demo user: username = "demo"</small>
-                        </p>
-                    </form>
-                    
-                    <!-- Register Form -->
-                    <form id="registerForm" class="tab-content">
-                        <div class="form-group">
-                            <label>Username</label>
-                            <input type="text" class="form-control" id="registerUsername" placeholder="Choose username" required>
-                        </div>
-                        <div class="form-group">
-                            <label>Email</label>
-                            <input type="email" class="form-control" id="registerEmail" placeholder="Enter email" required>
-                        </div>
-                        <button type="submit" class="btn btn-success btn-block">
-                            <span class="btn-text">Create Account</span>
-                            <span class="btn-spinner hidden">Creating...</span>
-                        </button>
-                    </form>
-                </div>
-            </div>
-            
-            <!-- Main Dashboard (Hidden initially) -->
-            <div id="dashboard" class="hidden">
-                <!-- Header -->
-                <div class="header">
-                    <div class="logo">
-                        <div class="logo-icon">C$</div>
-                        <span>Cashine eWallet</span>
-                    </div>
-                    <div class="user-info">
-                        <div class="balance-display">
-                            Balance: $<span id="currentBalance">0.00</span>
-                        </div>
-                        <button class="logout-btn" onclick="logout()">Logout</button>
-                    </div>
-                </div>
-                
-                <!-- Main Content -->
-                <div class="content">
-                    <!-- Left Sidebar -->
-                    <div class="sidebar">
-                        <div class="card">
-                            <h3>Quick Actions</h3>
-                            <div class="d-flex flex-column gap-3">
-                                <button class="btn btn-primary" onclick="showTab('deposit')">
-                                    💰 Deposit Money
-                                </button>
-                                <button class="btn btn-warning" onclick="showTab('withdraw')">
-                                    💳 Withdraw Money
-                                </button>
-                                <button class="btn btn-success" onclick="showTab('transfer')">
-                                    🔄 Transfer Money
-                                </button>
-                                <button class="btn" onclick="showTab('users')">
-                                    👥 View All Users
-                                </button>
-                            </div>
-                        </div>
-                        
-                        <div class="card">
-                            <h3>Account Info</h3>
-                            <div id="accountInfo">
-                                <p><strong>Username:</strong> <span id="infoUsername">-</span></p>
-                                <p><strong>Email:</strong> <span id="infoEmail">-</span></p>
-                                <p><strong>Account ID:</strong> <span id="infoId">-</span></p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- Main Area -->
-                    <div class="main-content">
-                        <!-- Alert Area -->
-                        <div id="dashboardAlert" class="alert hidden"></div>
-                        
-                        <!-- Tabs -->
-                        <div class="tabs">
-                            <button class="tab active" onclick="showTab('transactions')">Transactions</button>
-                            <button class="tab" onclick="showTab('deposit')">Deposit</button>
-                            <button class="tab" onclick="showTab('withdraw')">Withdraw</button>
-                            <button class="tab" onclick="showTab('transfer')">Transfer</button>
-                            <button class="tab" onclick="showTab('users')">All Users</button>
-                        </div>
-                        
-                        <!-- Tab Contents -->
-                        <div id="transactionsTab" class="tab-content active">
-                            <h3 class="mb-4">Recent Transactions</h3>
-                            <div id="transactionsList" class="transaction-list">
-                                <!-- Transactions will be loaded here -->
-                            </div>
-                        </div>
-                        
-                        <div id="depositTab" class="tab-content">
-                            <h3 class="mb-4">Deposit Money</h3>
-                            <form id="depositForm">
-                                <div class="form-group">
-                                    <label>Amount ($)</label>
-                                    <input type="number" class="form-control" id="depositAmount" 
-                                           min="1" step="0.01" placeholder="Enter amount" required>
-                                </div>
-                                <button type="submit" class="btn btn-primary">Deposit</button>
-                            </form>
-                        </div>
-                        
-                        <div id="withdrawTab" class="tab-content">
-                            <h3 class="mb-4">Withdraw Money</h3>
-                            <form id="withdrawForm">
-                                <div class="form-group">
-                                    <label>Amount ($)</label>
-                                    <input type="number" class="form-control" id="withdrawAmount" 
-                                           min="1" step="0.01" placeholder="Enter amount" required>
-                                </div>
-                                <button type="submit" class="btn btn-warning">Withdraw</button>
-                            </form>
-                        </div>
-                        
-                        <div id="transferTab" class="tab-content">
-                            <h3 class="mb-4">Transfer Money</h3>
-                            <form id="transferForm">
-                                <div class="form-group">
-                                    <label>Recipient Username</label>
-                                    <input type="text" class="form-control" id="recipientUsername" 
-                                           placeholder="Enter recipient's username" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Amount ($)</label>
-                                    <input type="number" class="form-control" id="transferAmount" 
-                                           min="1" step="0.01" placeholder="Enter amount" required>
-                                </div>
-                                <div class="form-group">
-                                    <label>Description (Optional)</label>
-                                    <input type="text" class="form-control" id="transferDescription" 
-                                           placeholder="e.g., Lunch payment">
-                                </div>
-                                <button type="submit" class="btn btn-success">Send Money</button>
-                            </form>
-                        </div>
-                        
-                        <div id="usersTab" class="tab-content">
-                            <h3 class="mb-4">All Users</h3>
-                            <div id="usersList">
-                                <!-- Users will be loaded here -->
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Loading Screen -->
-            <div id="loadingScreen" class="loading hidden">
-                <div class="spinner"></div>
-                <p>Loading...</p>
-            </div>
-        </div>
+  <header>
+    <h1>Cashine eWallet</h1>
+    <p>Secure • Easy • Fast</p>
+  </header>
+
+  <!-- Auth Forms -->
+  <div class="container" id="authSection">
+    <h2>Login</h2>
+    <input type="text" id="loginID" placeholder="Phone or Wallet ID">
+    <input type="password" id="loginPIN" placeholder="PIN">
+    <button onclick="login()">Login</button>
+    <p style="text-align:center;">No account? <a href="#" onclick="toggleAuth()">Sign Up</a></p>
+  </div>
+
+  <div class="container hidden" id="signupSection">
+    <h2>Sign Up</h2>
+    <input type="text" id="signupName" placeholder="Full Name">
+    <input type="text" id="signupPhone" placeholder="Phone Number">
+    <input type="password" id="signupPIN" placeholder="PIN (4 digits)">
+    <button onclick="signup()">Create Account</button>
+    <p style="text-align:center;">Already have an account? <a href="#" onclick="toggleAuth()">Login</a></p>
+  </div>
+
+  <div class="container hidden" id="dashboard">
+    <div class="dashboard">
+      <h2 id="welcomeMsg">Welcome!</h2>
+      <div class="balance">Balance: ₱<span id="walletBalance">0.00</span></div>
+      <button onclick="showSend()">Send Money</button>
+      <button onclick="showReceive()">Receive Money</button>
+      <button onclick="showTransactions()">Transaction History</button>
+      <button onclick="logout()">Logout</button>
+
+      <div id="sendMoney" class="hidden">
+        <h3>Send Money</h3>
+        <button onclick="goBackToDashboard()">⬅ Back</button>
+        <input id="sendTo" placeholder="Recipient Wallet ID">
+        <input id="sendAmount" type="number" placeholder="Amount (PHP)">
+        <input id="sendPIN" type="password" placeholder="Enter PIN">
+        <button onclick="sendMoney()" class="primary">Send</button>
+      </div>
+
+      <div id="receiveMoney" class="hidden">
+        <h3>Receive Money</h3>
+        <button onclick="goBackToDashboard()">⬅ Back</button>
+        <p>Share your Wallet ID to receive funds:</p>
+        <p><strong id="myWalletID"></strong></p>
+      </div>
+
+      <div id="transactions" class="hidden">
+        <h3>Transactions</h3>
+        <button onclick="goBackToDashboard()">⬅ Back</button>
+        <div id="transactionList"></div>
+      </div>
     </div>
+  </div>
 
-    <!-- All JavaScript in one file -->
-    <script>
-        // ===== GLOBAL STATE =====
-        let currentUser = null;
-        const API_BASE = window.location.origin;
+  <script>
+    let users = JSON.parse(localStorage.getItem('cashine_users')) || [];
+    let currentUser = null;
 
-        // ===== DOM ELEMENTS =====
-        const authScreen = document.getElementById('authScreen');
-        const dashboard = document.getElementById('dashboard');
-        const loadingScreen = document.getElementById('loadingScreen');
-        const authAlert = document.getElementById('authAlert');
-        const dashboardAlert = document.getElementById('dashboardAlert');
+    function goBackToDashboard() {
+      document.getElementById("sendMoney").classList.add("hidden");
+      document.getElementById("receiveMoney").classList.add("hidden");
+      document.getElementById("transactions").classList.add("hidden");
+      document.getElementById("dashboard").classList.remove("hidden");
+    }
 
-        // ===== UTILITY FUNCTIONS =====
-        function showAlert(element, message, type = 'error') {
-            element.className = `alert alert-${type}`;
-            element.innerHTML = `
-                <span>${message}</span>
-                <button class="close-alert" onclick="this.parentElement.classList.add('hidden')">×</button>
-            `;
-            element.classList.remove('hidden');
-        }
+    function toggleAuth() {
+      document.getElementById("authSection").classList.toggle("hidden");
+      document.getElementById("signupSection").classList.toggle("hidden");
+    }
 
-        function showLoading() {
-            loadingScreen.classList.remove('hidden');
-        }
+    function signup() {
+      const name = document.getElementById("signupName").value.trim();
+      const phone = document.getElementById("signupPhone").value.trim();
+      const pin = document.getElementById("signupPIN").value.trim();
 
-        function hideLoading() {
-            loadingScreen.classList.add('hidden');
-        }
+      if (!name || !phone || pin.length !== 4) {
+        alert("Fill all fields. PIN must be 4 digits.");
+        return;
+      }
+      const walletID = "W" + Math.floor(100000 + Math.random() * 900000);
+      const user = { name, phone, walletID, pin, balance: 100, transactions: [] };
+      users.push(user);
+      localStorage.setItem('cashine_users', JSON.stringify(users));
+      alert("Account created! Your Wallet ID: " + walletID);
+      toggleAuth();
+    }
 
-        function formatCurrency(amount) {
-            return new Intl.NumberFormat('en-US', {
-                style: 'currency',
-                currency: 'USD'
-            }).format(amount);
-        }
+    function login() {
+      const id = document.getElementById("loginID").value.trim();
+      const pin = document.getElementById("loginPIN").value.trim();
+      currentUser = users.find(u => (u.phone === id || u.walletID === id) && u.pin === pin);
+      if (!currentUser) {
+        alert("Invalid credentials.");
+        return;
+      }
+      document.getElementById("authSection").classList.add("hidden");
+      document.getElementById("dashboard").classList.remove("hidden");
+      document.getElementById("welcomeMsg").innerText = "Welcome, " + currentUser.name;
+      document.getElementById("walletBalance").innerText = currentUser.balance.toFixed(2);
+      document.getElementById("myWalletID").innerText = currentUser.walletID;
+    }
 
-        // ===== AUTH FUNCTIONS =====
-        function switchAuthTab(tab) {
-            // Update active tab buttons
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll(`.tab`).forEach(t => {
-                if (t.textContent.toLowerCase().includes(tab)) {
-                    t.classList.add('active');
-                }
-            });
+    function logout() {
+      currentUser = null;
+      document.getElementById("dashboard").classList.add("hidden");
+      document.getElementById("authSection").classList.remove("hidden");
+    }
 
-            // Show active form
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.getElementById(`${tab}Form`).classList.add('active');
-        }
+    function showSend() {
+      hideSections();
+      document.getElementById("sendMoney").classList.remove("hidden");
+    }
 
-        async function login(username) {
-            showLoading();
-            try {
-                const response = await fetch(`${API_BASE}/api/login`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username })
-                });
+    function showReceive() {
+      hideSections();
+      document.getElementById("receiveMoney").classList.remove("hidden");
+    }
 
-                const data = await response.json();
+    function showTransactions() {
+      hideSections();
+      const list = document.getElementById("transactionList");
+      list.innerHTML = currentUser.transactions.map(t =>
+        `<div class="transaction">${t.date} - ${t.type}: ₱${t.amount} (${t.note})</div>`
+      ).join("");
+      document.getElementById("transactions").classList.remove("hidden");
+    }
 
-                if (!response.ok) {
-                    throw new Error(data.error || 'Login failed');
-                }
+    function hideSections() {
+      document.getElementById("sendMoney").classList.add("hidden");
+      document.getElementById("receiveMoney").classList.add("hidden");
+      document.getElementById("transactions").classList.add("hidden");
+    }
 
-                currentUser = data.user;
-                showDashboard();
-                loadUserData();
-            } catch (error) {
-                showAlert(authAlert, error.message, 'error');
-            } finally {
-                hideLoading();
-            }
-        }
+    function sendMoney() {
+      const to = document.getElementById("sendTo").value.trim();
+      const amount = parseFloat(document.getElementById("sendAmount").value);
+      const pin = document.getElementById("sendPIN").value.trim();
 
-        async function register(username, email) {
-            showLoading();
-            try {
-                const response = await fetch(`${API_BASE}/api/register`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, email })
-                });
+      if (pin !== currentUser.pin) {
+        alert("Wrong PIN.");
+        return;
+      }
+      if (isNaN(amount) || amount <= 0) {
+        alert("Enter a valid amount.");
+        return;
+      }
+      if (amount > currentUser.balance) {
+        alert("Insufficient balance.");
+        return;
+      }
 
-                const data = await response.json();
+      const recipient = users.find(u => u.walletID === to);
 
-                if (!response.ok) {
-                    throw new Error(data.error || 'Registration failed');
-                }
+      if (!recipient) {
+        alert("Recipient not found in Cashine. Transaction cancelled.");
+        return;
+      }
 
-                currentUser = data.user;
-                showAlert(authAlert, 'Account created successfully!', 'success');
-                setTimeout(() => {
-                    showDashboard();
-                    loadUserData();
-                }, 1500);
-            } catch (error) {
-                showAlert(authAlert, error.message, 'error');
-            } finally {
-                hideLoading();
-            }
-        }
+      currentUser.balance -= amount;
+      currentUser.transactions.push({
+        type: "Sent",
+        amount,
+        note: "To " + recipient.walletID,
+        date: new Date().toLocaleString()
+      });
 
-        async function logout() {
-            try {
-                await fetch(`${API_BASE}/api/logout`, { method: 'POST' });
-                currentUser = null;
-                authScreen.classList.remove('hidden');
-                dashboard.classList.add('hidden');
-                switchAuthTab('login');
-            } catch (error) {
-                console.error('Logout error:', error);
-            }
-        }
+      recipient.balance += amount;
+      recipient.transactions.push({
+        type: "Received",
+        amount,
+        note: "From " + currentUser.walletID,
+        date: new Date().toLocaleString()
+      });
 
-        // ===== DASHBOARD FUNCTIONS =====
-        function showDashboard() {
-            authScreen.classList.add('hidden');
-            dashboard.classList.remove('hidden');
-            showTab('transactions');
-        }
+      localStorage.setItem('cashine_users', JSON.stringify(users));
+      document.getElementById("walletBalance").innerText = currentUser.balance.toFixed(2);
 
-        function showTab(tabName) {
-            // Update active tab
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.tab').forEach(t => {
-                if (t.textContent.toLowerCase().includes(tabName)) {
-                    t.classList.add('active');
-                }
-            });
-
-            // Show active content
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.getElementById(`${tabName}Tab`).classList.add('active');
-
-            // Load data for specific tabs
-            if (tabName === 'transactions') {
-                loadTransactions();
-            } else if (tabName === 'users') {
-                loadAllUsers();
-            }
-        }
-
-        async function loadUserData() {
-            try {
-                const response = await fetch(`${API_BASE}/api/current-user`);
-                if (response.ok) {
-                    const data = await response.json();
-                    currentUser = data;
-                    
-                    // Update UI
-                    document.getElementById('currentBalance').textContent = data.balance.toFixed(2);
-                    document.getElementById('infoUsername').textContent = data.username;
-                    document.getElementById('infoEmail').textContent = data.email;
-                    document.getElementById('infoId').textContent = data.id;
-                }
-            } catch (error) {
-                console.error('Error loading user data:', error);
-            }
-        }
-
-        async function loadTransactions() {
-            const transactionsList = document.getElementById('transactionsList');
-            transactionsList.innerHTML = '<p class="text-center">Loading transactions...</p>';
-
-            try {
-                const response = await fetch(`${API_BASE}/api/transactions`);
-                const transactions = await response.json();
-
-                if (transactions.length === 0) {
-                    transactionsList.innerHTML = '<p class="text-center">No transactions yet.</p>';
-                    return;
-                }
-
-                transactionsList.innerHTML = transactions.map(t => `
-                    <div class="transaction-item">
-                        <div class="transaction-info">
-                            <h4>${t.description}</h4>
-                            <p>${t.date} • ${t.type.charAt(0).toUpperCase() + t.type.slice(1)}</p>
-                        </div>
-                        <div class="transaction-amount ${t.type === 'deposit' || (t.type === 'transfer' && t.description.includes('from')) ? 'positive' : 'negative'}">
-                            ${t.type === 'deposit' || (t.type === 'transfer' && t.description.includes('from')) ? '+' : '-'}$${Math.abs(t.amount).toFixed(2)}
-                        </div>
-                    </div>
-                `).join('');
-            } catch (error) {
-                transactionsList.innerHTML = '<p class="text-center error">Error loading transactions</p>';
-            }
-        }
-
-        async function loadAllUsers() {
-            const usersList = document.getElementById('usersList');
-            usersList.innerHTML = '<p class="text-center">Loading users...</p>';
-
-            try {
-                const response = await fetch(`${API_BASE}/api/users`);
-                const users = await response.json();
-
-                if (users.length === 0) {
-                    usersList.innerHTML = '<p class="text-center">No users found.</p>';
-                    return;
-                }
-
-                usersList.innerHTML = `
-                    <div style="display: grid; gap: 15px;">
-                        ${users.map(user => `
-                            <div class="transaction-item">
-                                <div class="transaction-info">
-                                    <h4>${user.username}</h4>
-                                    <p>${user.email}</p>
-                                </div>
-                                <div class="transaction-amount positive">
-                                    ${formatCurrency(user.balance)}
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-            } catch (error) {
-                usersList.innerHTML = '<p class="text-center error">Error loading users</p>';
-            }
-        }
-
-        // ===== TRANSACTION FUNCTIONS =====
-        async function deposit(amount) {
-            showLoading();
-            try {
-                const response = await fetch(`${API_BASE}/api/deposit`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ amount: parseFloat(amount) })
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.error || 'Deposit failed');
-                }
-
-                showAlert(dashboardAlert, `Successfully deposited ${formatCurrency(amount)}`, 'success');
-                await loadUserData();
-                showTab('transactions');
-            } catch (error) {
-                showAlert(dashboardAlert, error.message, 'error');
-            } finally {
-                hideLoading();
-            }
-        }
-
-        async function withdraw(amount) {
-            showLoading();
-            try {
-                const response = await fetch(`${API_BASE}/api/withdraw`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ amount: parseFloat(amount) })
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.error || 'Withdrawal failed');
-                }
-
-                showAlert(dashboardAlert, `Successfully withdrew ${formatCurrency(amount)}`, 'success');
-                await loadUserData();
-                showTab('transactions');
-            } catch (error) {
-                showAlert(dashboardAlert, error.message, 'error');
-            } finally {
-                hideLoading();
-            }
-        }
-
-        async function transfer(recipientUsername, amount, description) {
-            showLoading();
-            try {
-                const response = await fetch(`${API_BASE}/api/transfer`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
-                        recipient_username: recipientUsername,
-                        amount: parseFloat(amount),
-                        description: description || ''
-                    })
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.error || 'Transfer failed');
-                }
-
-                showAlert(dashboardAlert, `Successfully transferred ${formatCurrency(amount)} to ${recipientUsername}`, 'success');
-                await loadUserData();
-                showTab('transactions');
-            } catch (error) {
-                showAlert(dashboardAlert, error.message, 'error');
-            } finally {
-                hideLoading();
-            }
-        }
-
-        // ===== EVENT LISTENERS =====
-        document.getElementById('loginForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const username = document.getElementById('loginUsername').value.trim();
-            if (username) {
-                await login(username);
-            }
-        });
-
-        document.getElementById('registerForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const username = document.getElementById('registerUsername').value.trim();
-            const email = document.getElementById('registerEmail').value.trim();
-            
-            if (username && email) {
-                await register(username, email);
-            }
-        });
-
-        document.getElementById('depositForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const amount = document.getElementById('depositAmount').value;
-            if (amount && parseFloat(amount) > 0) {
-                await deposit(amount);
-                e.target.reset();
-            }
-        });
-
-        document.getElementById('withdrawForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const amount = document.getElementById('withdrawAmount').value;
-            if (amount && parseFloat(amount) > 0) {
-                await withdraw(amount);
-                e.target.reset();
-            }
-        });
-
-        document.getElementById('transferForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const recipient = document.getElementById('recipientUsername').value.trim();
-            const amount = document.getElementById('transferAmount').value;
-            const description = document.getElementById('transferDescription').value.trim();
-            
-            if (recipient && amount && parseFloat(amount) > 0) {
-                await transfer(recipient, amount, description);
-                e.target.reset();
-            }
-        });
-
-        // ===== INITIALIZATION =====
-        document.addEventListener('DOMContentLoaded', async () => {
-            // Check if user is already logged in
-            try {
-                const response = await fetch(`${API_BASE}/api/current-user`);
-                if (response.ok) {
-                    const user = await response.json();
-                    currentUser = user;
-                    showDashboard();
-                    loadUserData();
-                }
-            } catch (error) {
-                console.log('No active session');
-            }
-        });
-
-        // ===== KEYBOARD SHORTCUTS =====
-        document.addEventListener('keydown', (e) => {
-            // Ctrl+D for deposit
-            if (e.ctrlKey && e.key === 'd') {
-                e.preventDefault();
-                showTab('deposit');
-            }
-            // Ctrl+T for transfer
-            if (e.ctrlKey && e.key === 't') {
-                e.preventDefault();
-                showTab('transfer');
-            }
-            // Ctrl+L for logout
-            if (e.ctrlKey && e.key === 'l') {
-                e.preventDefault();
-                logout();
-            }
-        });
-    </script>
+      alert("Money sent successfully to " + recipient.name + "!");
+      document.getElementById("sendTo").value = "";
+      document.getElementById("sendAmount").value = "";
+      document.getElementById("sendPIN").value = "";
+    }
+  </script>
 </body>
 </html>
