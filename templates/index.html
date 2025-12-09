@@ -743,9 +743,10 @@
       document.getElementById("signupSection").classList.toggle("hidden");
     }
     
-    // Calculate fees (5% or ₱5 per ₱100)
+    // Calculate fees (5% with minimum ₱5)
     function calculateFee(amount) {
-      return Math.ceil(amount / 100) * 5;
+      const fee = amount * 0.05;
+      return Math.max(fee, 5);
     }
     
     // Signup function with API call
@@ -1239,4 +1240,5 @@
   </script>
 </body>
 </html>
+
 
