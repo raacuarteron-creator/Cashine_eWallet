@@ -3,7 +3,6 @@ from flask_sqlalchemy import SQLAlchemy
 from flask_cors import CORS
 import os
 from datetime import datetime
-import sys
 
 app = Flask(__name__)
 CORS(app, supports_credentials=True)
@@ -284,9 +283,8 @@ def health():
         'timestamp': datetime.utcnow().isoformat()
     })
 
-# Initialize database
-@app.before_first_request
-def setup():
+# Initialize database - FIXED for Flask 2.3+
+with app.app_context():
     try:
         db.create_all()
         # Create demo user if none exists
@@ -294,8 +292,9 @@ def setup():
             user = User(username='demo', email='demo@example.com', balance=1000.0)
             db.session.add(user)
             db.session.commit()
+            print("Demo user created with $1000 balance")
     except Exception as e:
-        print(f"Setup error: {e}")
+        print(f"Database initialization error: {e}")
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 10000))
