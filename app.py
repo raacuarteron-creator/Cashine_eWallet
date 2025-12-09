@@ -54,6 +54,12 @@ class Transaction(db.Model):
     cashout_method = db.Column(db.String(50), nullable=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
+# Helper function for fee calculation
+def calculate_fee_percent(amount):
+    """Calculate 5% fee with a minimum of ₱5."""
+    fee = amount * 0.05
+    return max(fee, 5.0)
+
 # Routes
 @app.route('/')
 def home():
@@ -229,10 +235,8 @@ def send_money():
         if recipient.id == sender.id:
             return jsonify({'success': False, 'error': 'Cannot send money to yourself'}), 400
         
-        # Calculate fee (5% or ₱5 per ₱100)
-        fee = (amount // 100) * 5
-        if amount % 100 > 0:
-            fee += 5
+        # Calculate fee (5% with minimum ₱5)
+        fee = calculate_fee_percent(amount)
         total_deduction = amount + fee
         
         if sender.balance < total_deduction:
@@ -352,10 +356,8 @@ def cash_out():
         if not check_password_hash(user.pin_hash, pin):
             return jsonify({'success': False, 'error': 'Invalid PIN'}), 401
         
-        # Calculate fee (5% or ₱5 per ₱100)
-        fee = (amount // 100) * 5
-        if amount % 100 > 0:
-            fee += 5
+        # Calculate fee (5% with minimum ₱5)
+        fee = calculate_fee_percent(amount)
         total_deduction = amount + fee
         
         if user.balance < total_deduction:
@@ -422,10 +424,7 @@ def calculate_fee():
     if transaction_type == 'bank':
         fee = 25.0
     else:
-        # 5% or ₱5 per ₱100
-        fee = (amount // 100) * 5
-        if amount % 100 > 0:
-            fee += 5
+        fee = calculate_fee_percent(amount)
     
     return jsonify({
         'success': True,
